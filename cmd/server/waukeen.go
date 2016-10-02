@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -19,5 +20,6 @@ func main() {
 	}
 	mux := srv.NewServeMux()
 
+	fmt.Println("Server listening on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }

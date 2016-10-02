@@ -53,8 +53,8 @@ func (srv *Server) NewServeMux() *http.ServeMux {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
-		//FIXME relative path
-		t, err := template.ParseFiles(path.Join("templates", "statement.html"))
+		p := path.Join("web", "templates", "statement.html")
+		t, err := template.ParseFiles(p)
 		if err == nil {
 			err = t.Execute(w, nil)
 		}

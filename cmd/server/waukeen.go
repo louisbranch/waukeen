@@ -12,7 +12,11 @@ import (
 
 func main() {
 	importer := &xml.XML{}
-	db := sqlite.NewAccountDB()
+	db, err := sqlite.NewAccountDB()
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	srv := &web.Server{
 		Statement: importer,

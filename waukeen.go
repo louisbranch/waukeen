@@ -64,12 +64,14 @@ type StatementImporter interface {
 }
 
 type AccountDB interface {
-	All() []Account
+	Create(*Account) error
+	Update(*Account) error
+	FindAll() ([]Account, error)
 	Find(number string) (*Account, error)
 }
 
 type TransactionDB interface {
-	All(end time.Time) []Transaction
+	FindAll(end time.Time) ([]Transaction, error)
 	Create(*Transaction) error
 	Update(*Transaction) error
 	Delete(*Transaction) error

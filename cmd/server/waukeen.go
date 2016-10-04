@@ -22,6 +22,7 @@ func main() {
 		Statement:    importer,
 		Accounts:     db.Accounts(),
 		Transactions: db.Transactions(),
+		Rules:        db.Rules(),
 	}
 	mux := srv.NewServeMux()
 

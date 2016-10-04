@@ -80,6 +80,10 @@ func (db *DB) Transactions() *Transactions {
 	return &Transactions{db.DB}
 }
 
+func (db *DB) Rules() *Rules {
+	return &Rules{db.DB}
+}
+
 func (db *Accounts) Create(a *waukeen.Account) error {
 	q := `INSERT into accounts (number, name, type, currency, balance) values
 (?, ?, ?, ?, ?);`
@@ -144,14 +148,14 @@ func (db *Accounts) Update(a *waukeen.Account) error {
 	return err
 }
 
-func (db *Transactions) Create(acc string, t *waukeen.Transaction) error {
+func (db *Transactions) Create(t *waukeen.Transaction) error {
 	q := `INSERT into transactions
 	(account_id, fitid, type, title, description, amount, tags, date)
-	values (?, ?, ?, ?, ?, ?, ?, ?, ?);`
+	values (?, ?, ?, ?, ?, ?, ?, ?);`
 
 	tags := strings.Join(t.Tags, ",")
 
-	res, err := db.Exec(q, acc, t.FITID, t.Type, t.Title, t.Description,
+	res, err := db.Exec(q, t.AccountID, t.FITID, t.Type, t.Title, t.Description,
 		t.Amount, tags, t.Date)
 
 	if err != nil {
@@ -220,7 +224,7 @@ func (db *Rules) Create(r *waukeen.Rule) error {
 func (db *Rules) FindAll(acc string) ([]waukeen.Rule, error) {
 	var rules []waukeen.Rule
 
-	rows, err := db.Query(`SELECT id, account_id, type, match, result`)
+	rows, err := db.Query(`SELECT id, account_id, type, match, result from rules`)
 	if err != nil {
 		return nil, err
 	}

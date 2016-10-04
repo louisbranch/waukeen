@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 	"path"
+	"strconv"
 
 	"github.com/luizbranco/waukeen"
 )
@@ -28,6 +29,7 @@ func (srv *Server) NewServeMux() *http.ServeMux {
 	mux.HandleFunc("/statements", srv.statementCreate)
 	mux.HandleFunc("/statements/new", srv.statementNew)
 	mux.HandleFunc("/rules/new", srv.rulesNew)
+	mux.HandleFunc("/rules", srv.rules)
 
 	return mux
 }
@@ -89,6 +91,16 @@ func (srv *Server) statementCreate(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprintln(w, err)
 			return
+		}
+
+		for _, t := range stmt.Transactions {
+			t.AccountID = acc.ID
+			err := srv.Transactions.Create(&t)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprintln(w, err)
+				return
+			}
 		}
 
 	}
@@ -155,22 +167,55 @@ func (srv *Server) rulesNew(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (srv *Server) rulesCreate(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
+func (srv *Server) rules(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		rules, err := srv.Rules.FindAll("")
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintln(w, err)
+			return
+		}
+
+		p := path.Join("web", "templates", "rules.html")
+		t, err := template.ParseFiles(p)
+		if err == nil {
+			err = t.Execute(w, rules)
+		}
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	case "POST":
+		t := r.FormValue("type")
+		n, err := strconv.Atoi(t)
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		rule := &waukeen.Rule{
+			AccountID: r.FormValue("account"),
+			Type:      waukeen.RuleType(n),
+			Match:     r.FormValue("match"),
+			Result:    r.FormValue("result"),
+		}
+
+		if rule.Match == "" {
+			http.Redirect(w, r, "/rules/new", http.StatusFound)
+			return
+		}
+
+		err = srv.Rules.Create(rule)
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		http.Redirect(w, r, "/rules", http.StatusFound)
+	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
-
-	rule := &waukeen.Rule{
-		AccountID: r.FormValue("account"),
-		Match:     r.FormValue("match"),
-		Result:    r.FormValue("result"),
-	}
-
-	err := srv.Rules.Create(rule)
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-
-	http.Redirect(w, r, "/accounts", http.StatusFound)
 }

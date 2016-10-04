@@ -69,7 +69,7 @@ type AccountsDB interface {
 }
 
 type TransactionsDB interface {
-	Create(acc string, t *Transaction) error
+	Create(t *Transaction) error
 	FindAll(acc string) ([]Transaction, error)
 	//Update(*Transaction) error
 	//Find(FITID string) (*Transaction, error)

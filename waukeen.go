@@ -14,11 +14,15 @@ const (
 	Checking
 	Savings
 	CreditCard
+)
 
+const (
 	OtherTransaction TransactionType = iota
 	Credit
 	Debit
+)
 
+const (
 	ReplaceRule RuleType = iota
 	TagRule
 )
@@ -94,6 +98,16 @@ func (t AccountType) String() string {
 		return "Savings"
 	case CreditCard:
 		return "Credit Card"
+	}
+	return "Other"
+}
+
+func (t RuleType) String() string {
+	switch t {
+	case ReplaceRule:
+		return "Replace"
+	case TagRule:
+		return "Tagging"
 	}
 	return "Other"
 }

@@ -15,6 +15,7 @@ type Server struct {
 	Accounts     waukeen.AccountsDB
 	Transactions waukeen.TransactionsDB
 	Rules        waukeen.RulesDB
+	Transformer  waukeen.TransactionTransformer
 }
 
 type AccountContent struct {
@@ -93,9 +94,21 @@ func (srv *Server) statementCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		for _, t := range stmt.Transactions {
+		rules, err := srv.Rules.FindAll(acc.ID)
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintln(w, err)
+			return
+		}
+
+		for _, tn := range stmt.Transactions {
+			t := &tn
 			t.AccountID = acc.ID
-			err := srv.Transactions.Create(&t)
+			for _, r := range rules {
+				srv.Transformer.Transform(t, r)
+			}
+			err := srv.Transactions.Create(t)
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				fmt.Fprintln(w, err)

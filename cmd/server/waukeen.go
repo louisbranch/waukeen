@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/luizbranco/waukeen/sqlite"
+	"github.com/luizbranco/waukeen/transformer"
 	"github.com/luizbranco/waukeen/web"
 	"github.com/luizbranco/waukeen/xml"
 )
@@ -23,6 +24,7 @@ func main() {
 		Accounts:     db.Accounts(),
 		Transactions: db.Transactions(),
 		Rules:        db.Rules(),
+		Transformer:  transformer.Text{},
 	}
 	mux := srv.NewServeMux()
 

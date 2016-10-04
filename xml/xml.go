@@ -78,7 +78,7 @@ func newBankAccount(res ofx.BankStatementResponse) waukeen.Account {
 func newTransaction(res ofx.Transaction) waukeen.Transaction {
 	t := waukeen.Transaction{
 		FITID:       string(res.FITID),
-		Name:        res.Name,
+		Title:       res.Name,
 		Description: res.Memo,
 		Amount:      int64(res.Amount * 100),
 		//FIXME Date:   res.DatePosted,

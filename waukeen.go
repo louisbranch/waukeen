@@ -5,13 +5,22 @@ import (
 	"time"
 )
 
-type AccountType int64
+type AccountType int
+type TransactionType int
+type RuleType int
 
 const (
 	OtherAccount AccountType = iota
 	Checking
 	Savings
 	CreditCard
+
+	OtherTransaction TransactionType = iota
+	Credit
+	Debit
+
+	ReplaceRule RuleType = iota
+	TagRule
 )
 
 type Account struct {
@@ -21,6 +30,61 @@ type Account struct {
 	Type     AccountType
 	Currency string
 	Balance  int64
+}
+
+type Transaction struct {
+	ID          string
+	AccountID   string
+	FITID       string
+	Type        TransactionType
+	Title       string
+	Alias       string
+	Description string
+	Amount      int64
+	Tags        []string
+	Date        time.Time
+}
+
+type Rule struct {
+	ID        string
+	AccountID string
+	Type      RuleType
+	Match     string
+	Result    string
+}
+
+type Statement struct {
+	Account      Account
+	Transactions []Transaction
+}
+
+type StatementImporter interface {
+	Import(io.Reader) ([]Statement, error)
+}
+
+type AccountsDB interface {
+	Create(*Account) error
+	Update(*Account) error
+	FindAll() ([]Account, error)
+	Find(number string) (*Account, error)
+}
+
+type TransactionsDB interface {
+	Create(acc string, t *Transaction) error
+	FindAll(acc string) ([]Transaction, error)
+	//Update(*Transaction) error
+	//Find(FITID string) (*Transaction, error)
+	//FindAll(end time.Time) ([]Transaction, error)
+	//Delete(*Transaction) error
+}
+
+type RulesDB interface {
+	Create(*Rule) error
+	FindAll(acc string) ([]Rule, error)
+}
+
+type TransactionTransformer interface {
+	Transform(*Transaction, Rule)
 }
 
 func (t AccountType) String() string {
@@ -33,46 +97,4 @@ func (t AccountType) String() string {
 		return "Credit Card"
 	}
 	return "Other"
-}
-
-type TransactionType int
-
-const (
-	OtherTransaction TransactionType = iota
-	Credit
-	Debit
-)
-
-type Transaction struct {
-	ID          string
-	FITID       string
-	Type        TransactionType
-	Name        string
-	Description string
-	Amount      int64
-	Tags        []string
-	Date        time.Time
-}
-
-type Statement struct {
-	Account      Account
-	Transactions []Transaction
-}
-
-type StatementImporter interface {
-	Import(io.Reader) ([]Statement, error)
-}
-
-type AccountDB interface {
-	Create(*Account) error
-	Update(*Account) error
-	FindAll() ([]Account, error)
-	Find(number string) (*Account, error)
-}
-
-type TransactionDB interface {
-	FindAll(end time.Time) ([]Transaction, error)
-	Create(*Transaction) error
-	Update(*Transaction) error
-	Delete(*Transaction) error
 }

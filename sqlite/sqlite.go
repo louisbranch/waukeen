@@ -3,29 +3,29 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"strconv"
+	"strings"
 
 	"github.com/luizbranco/waukeen"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var db *sql.DB
-
-func init() {
-	var err error
-	db, err = sql.Open("sqlite3", "./waukeen.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-type AccountDB struct {
+type DB struct {
 	*sql.DB
 }
 
-func NewAccountDB() (*AccountDB, error) {
-	q := `
+type Accounts DB
+type Transactions DB
+type Rules DB
+
+func New(path string) (*DB, error) {
+	db, err := sql.Open("sqlite3", "./waukeen.db")
+	if err != nil {
+		return nil, err
+	}
+
+	queries := []string{
+		`
 		CREATE TABLE IF NOT EXISTS accounts(
 			id INTEGER PRIMARY KEY,
 			number TEXT NOT NULL,
@@ -34,17 +34,54 @@ func NewAccountDB() (*AccountDB, error) {
 			currency TEXT,
 			balance INTEGER
 		);
+		`,
 		`
-
-	_, err := db.Exec(q)
-
-	if err != nil {
-		return nil, err
+		CREATE TABLE IF NOT EXISTS transactions(
+			id INTEGER PRIMARY KEY,
+			account_id INTEGER,
+			fitid TEXT NOT NULL,
+			type INTEGER NOT NULL,
+			title TEXT NOT NULL,
+			alias TEXT,
+			description TEXT,
+			amount INTEGER,
+			date TEXT,
+			tags TEXT,
+			FOREIGN KEY(account_id) REFERENCES accounts(id)
+		);
+		`,
+		`
+		CREATE TABLE IF NOT EXISTS rules(
+			id INTEGER PRIMARY KEY,
+			account_id INTEGER,
+			type INTEGER NOT NULL,
+			match TEXT NOT NULL,
+			result TEXT NOT NULL,
+			FOREIGN KEY(account_id) REFERENCES accounts(id)
+		);
+		`,
 	}
-	return &AccountDB{db}, nil
+
+	for _, q := range queries {
+		_, err = db.Exec(q)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &DB{db}, nil
 }
 
-func (db *AccountDB) Create(a *waukeen.Account) error {
+func (db *DB) Accounts() *Accounts {
+	return &Accounts{db.DB}
+}
+
+func (db *DB) Transactions() *Transactions {
+	return &Transactions{db.DB}
+}
+
+func (db *Accounts) Create(a *waukeen.Account) error {
 	q := `INSERT into accounts (number, alias, type, currency, balance) values
 (?, ?, ?, ?, ?);`
 
@@ -65,7 +102,7 @@ func (db *AccountDB) Create(a *waukeen.Account) error {
 	return nil
 }
 
-func (db *AccountDB) FindAll() ([]waukeen.Account, error) {
+func (db *Accounts) FindAll() ([]waukeen.Account, error) {
 	var accounts []waukeen.Account
 
 	rows, err := db.Query("SELECT id, number, alias, type, currency, balance FROM accounts")
@@ -86,7 +123,7 @@ func (db *AccountDB) FindAll() ([]waukeen.Account, error) {
 	return accounts, err
 }
 
-func (db *AccountDB) Find(number string) (*waukeen.Account, error) {
+func (db *Accounts) Find(number string) (*waukeen.Account, error) {
 	q := "SELECT id, number, alias, type, currency, balance FROM accounts where number = ?"
 
 	a := &waukeen.Account{}
@@ -101,9 +138,104 @@ func (db *AccountDB) Find(number string) (*waukeen.Account, error) {
 	return a, nil
 }
 
-func (db *AccountDB) Update(a *waukeen.Account) error {
+func (db *Accounts) Update(a *waukeen.Account) error {
 	_, err := db.Exec(`
 	UPDATE accounts SET number=?, alias=?, type=?, currency=?, balance=?
 	where id = ?`, a.Number, a.Alias, a.Type, a.Currency, a.Balance, a.ID)
 	return err
+}
+
+func (db *Transactions) Create(acc string, t *waukeen.Transaction) error {
+	q := `INSERT into transactions
+	(account_id, fitid, type, title, alias, description, amount, tags, date)
+	values (?, ?, ?, ?, ?, ?, ?, ?, ?);`
+
+	tags := strings.Join(t.Tags, ",")
+
+	res, err := db.Exec(q, acc, t.FITID, t.Type, t.Title, t.Alias, t.Description,
+		t.Amount, tags, t.Date)
+
+	if err != nil {
+		return fmt.Errorf("error creating transaction: %s", err)
+	}
+
+	id, err := res.LastInsertId()
+
+	if err != nil {
+		return fmt.Errorf("error retrieving last transaction id: %s", err)
+	}
+
+	t.ID = strconv.FormatInt(id, 10)
+
+	return nil
+}
+
+func (db *Transactions) FindAll(acc string) ([]waukeen.Transaction, error) {
+	var transactions []waukeen.Transaction
+
+	rows, err := db.Query(`SELECT id, account_id, type, title, alias, description,
+	amount, date, tags FROM transactions`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var tags string
+		var date string //FIXME
+
+		t := waukeen.Transaction{}
+		err = rows.Scan(&t.ID, &t.AccountID, &t.Type, &t.Title, &t.Alias,
+			&t.Description, &t.Amount, &date, &tags)
+		if err != nil {
+			return nil, err
+		}
+		t.Tags = strings.Split(tags, ",")
+		transactions = append(transactions, t)
+	}
+	err = rows.Err()
+	return transactions, err
+}
+
+func (db *Rules) Create(r *waukeen.Rule) error {
+	q := `INSERT into rules (account_id, type, match, result) values
+(?, ?, ?, ?);`
+
+	res, err := db.Exec(q, r.AccountID, r.Type, r.Match, r.Result)
+
+	if err != nil {
+		return fmt.Errorf("error creating rule: %s", err)
+	}
+
+	id, err := res.LastInsertId()
+
+	if err != nil {
+		return fmt.Errorf("error retrieving last rule id: %s", err)
+	}
+
+	r.ID = strconv.FormatInt(id, 10)
+
+	return nil
+}
+
+func (db *Rules) FindAll(acc string) ([]waukeen.Rule, error) {
+	var rules []waukeen.Rule
+
+	rows, err := db.Query(`SELECT id, account_id, type, title, alias, description,
+	amount, date, tags FROM rules`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		r := waukeen.Rule{}
+		err = rows.Scan(&r.ID, &r.AccountID, &r.Type, &r.Result, &r.Match)
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, r)
+	}
+	err = rows.Err()
+	return rules, err
 }

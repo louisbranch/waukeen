@@ -12,15 +12,16 @@ import (
 
 func main() {
 	importer := &xml.XML{}
-	db, err := sqlite.NewAccountDB()
+	db, err := sqlite.New("waukeen.db")
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	srv := &web.Server{
-		Statement: importer,
-		DB:        db,
+		Statement:    importer,
+		Accounts:     db.Accounts(),
+		Transactions: db.Transactions(),
 	}
 	mux := srv.NewServeMux()
 

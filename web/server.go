@@ -10,94 +10,167 @@ import (
 )
 
 type Server struct {
-	Statement waukeen.StatementImporter
-	DB        waukeen.AccountDB
+	Statement    waukeen.StatementImporter
+	Accounts     waukeen.AccountsDB
+	Transactions waukeen.TransactionsDB
+	Rules        waukeen.RulesDB
+}
+
+type AccountContent struct {
+	Account      *waukeen.Account
+	Transactions []waukeen.Transaction
 }
 
 func (srv *Server) NewServeMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/statements", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-
-		case "GET":
-			accs, err := srv.DB.FindAll()
-
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprintln(w, err)
-				return
-			}
-
-			for _, a := range accs {
-				fmt.Fprintln(w, a)
-			}
-
-		case "POST":
-			file, _, err := r.FormFile("statement")
-			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprintln(w, err)
-				return
-			}
-
-			list, err := srv.Statement.Import(file)
-
-			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprintln(w, err)
-				return
-			}
-
-			for _, stmt := range list {
-				number := stmt.Account.Number
-
-				acc, err := srv.DB.Find(number)
-
-				if err == nil {
-					acc.Balance = stmt.Account.Balance
-					err = srv.DB.Update(acc)
-				} else {
-					acc = &stmt.Account
-					err = srv.DB.Create(acc)
-					if err != nil {
-						w.WriteHeader(http.StatusBadRequest)
-						fmt.Fprintln(w, err)
-						return
-					}
-				}
-
-				if err != nil {
-					w.WriteHeader(http.StatusBadRequest)
-					fmt.Fprintln(w, err)
-					return
-				}
-
-				fmt.Fprintf(w, "Account %s (%s): %s %.2f\n", acc.Number, acc.Type,
-					acc.Currency, float64(acc.Balance)/100)
-				for _, t := range stmt.Transactions {
-					fmt.Fprintf(w, "\t%s: %.2f\n", t.Name, float64(t.Amount)/100)
-				}
-			}
-		default:
-			w.WriteHeader(http.StatusMethodNotAllowed)
-		}
-	})
-
-	mux.HandleFunc("/statements/new", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "GET" {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-		p := path.Join("web", "templates", "statement.html")
-		t, err := template.ParseFiles(p)
-		if err == nil {
-			err = t.Execute(w, nil)
-		}
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-	})
+	mux.HandleFunc("/accounts", srv.accountsIndex)
+	mux.HandleFunc("/statements", srv.statementCreate)
+	mux.HandleFunc("/statements/new", srv.statementNew)
+	mux.HandleFunc("/rules/new", srv.rulesNew)
 
 	return mux
+}
+
+func (srv *Server) statementNew(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	p := path.Join("web", "templates", "statement.html")
+	t, err := template.ParseFiles(p)
+	if err == nil {
+		err = t.Execute(w, nil)
+	}
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+func (srv *Server) statementCreate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+
+	file, _, err := r.FormFile("statement")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(w, err)
+		return
+	}
+
+	list, err := srv.Statement.Import(file)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(w, err)
+		return
+	}
+
+	for _, stmt := range list {
+		number := stmt.Account.Number
+
+		acc, err := srv.Accounts.Find(number)
+
+		if err == nil {
+			acc.Balance = stmt.Account.Balance
+			err = srv.Accounts.Update(acc)
+		} else {
+			acc = &stmt.Account
+			err = srv.Accounts.Create(acc)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprintln(w, err)
+				return
+			}
+		}
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintln(w, err)
+			return
+		}
+
+	}
+	http.Redirect(w, r, "/accounts", http.StatusFound)
+}
+
+func (srv *Server) accountsIndex(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	content := struct {
+		AccountContent []AccountContent
+	}{}
+
+	accs, err := srv.Accounts.FindAll()
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, err)
+		return
+	}
+
+	for _, a := range accs {
+		transactions, err := srv.Transactions.FindAll(a.ID)
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintln(w, err)
+			return
+		}
+
+		c := AccountContent{
+			Account:      &a,
+			Transactions: transactions,
+		}
+
+		content.AccountContent = append(content.AccountContent, c)
+	}
+
+	p := path.Join("web", "templates", "accounts.html")
+	t, err := template.ParseFiles(p)
+	if err == nil {
+		err = t.Execute(w, content)
+	}
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+func (srv *Server) rulesNew(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	p := path.Join("web", "templates", "new_rule.html")
+	t, err := template.ParseFiles(p)
+	if err == nil {
+		err = t.Execute(w, nil)
+	}
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+func (srv *Server) rulesCreate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+
+	rule := &waukeen.Rule{
+		AccountID: r.FormValue("account"),
+		Match:     r.FormValue("match"),
+		Result:    r.FormValue("result"),
+	}
+
+	err := srv.Rules.Create(rule)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	http.Redirect(w, r, "/accounts", http.StatusFound)
 }

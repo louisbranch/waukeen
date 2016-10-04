@@ -88,10 +88,24 @@ type TransactionTransformer interface {
 
 var BootstrapTags = []Rule{
 	{Type: ReplaceRule, Match: "toronto", Result: ""},
-	{Type: TagRule, Match: "pizza", Result: "food"},
-	{Type: TagRule, Match: "burger", Result: "food"},
-	{Type: TagRule, Match: "restaurant", Result: "food"},
-	{Type: TagRule, Match: "taco", Result: "food"},
+	{Type: TagRule, Match: "pizza", Result: "restaurants"},
+	{Type: TagRule, Match: "burger", Result: "restaurants"},
+	{Type: TagRule, Match: "burgers", Result: "restaurants"},
+	{Type: TagRule, Match: "restaurant", Result: "restaurants"},
+	{Type: TagRule, Match: "taco", Result: "restaurants"},
+	{Type: TagRule, Match: "tacos", Result: "restaurants"},
+	{Type: TagRule, Match: "burrito", Result: "restaurants"},
+	{Type: TagRule, Match: "burritos", Result: "restaurants"},
+	{Type: TagRule, Match: "subway", Result: "restaurants"},
+	{Type: TagRule, Match: "cuisine", Result: "restaurants"},
+	{Type: TagRule, Match: "eatery", Result: "restaurants"},
+	{Type: TagRule, Match: "sushi", Result: "restaurants"},
+	{Type: TagRule, Match: "chipotle", Result: "restaurants"},
+	{Type: TagRule, Match: "loblaws", Result: "groceries"},
+	{Type: TagRule, Match: "sobeys", Result: "groceries"},
+	{Type: TagRule, Match: "cineplex", Result: "entertainment"},
+	{Type: TagRule, Match: "LCBO/RAO", Result: "liquor"},
+	{Type: TagRule, Match: "ttc", Result: "transportation"},
 }
 
 func (t AccountType) String() string {

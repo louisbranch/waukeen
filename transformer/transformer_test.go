@@ -18,17 +18,22 @@ func TestTextTransform(t *testing.T) {
 		{
 			waukeen.Transaction{Title: "Duty Free TORONTO"},
 			waukeen.Transaction{Title: "Duty Free"},
-			waukeen.Rule{Type: waukeen.ReplaceRule, Match: " toronto", Result: ""},
+			waukeen.Rule{Type: waukeen.ReplaceRule, Match: "toronto", Result: ""},
 		},
 		{
-			waukeen.Transaction{Title: "MY FONE PLUS"},
-			waukeen.Transaction{Title: "Wind"},
+			waukeen.Transaction{Title: "MY FONE PLUS #123"},
+			waukeen.Transaction{Title: "Wind #123"},
 			waukeen.Rule{Type: waukeen.ReplaceRule, Match: "MY FONE PLUS", Result: "Wind"},
 		},
 		{
 			waukeen.Transaction{Title: "MY FONE"},
 			waukeen.Transaction{Title: "MY FONE"},
 			waukeen.Rule{Type: waukeen.ReplaceRule, Match: "MY FONE PLUS", Result: "Wind"},
+		},
+		{
+			waukeen.Transaction{Title: "King Tacos?"},
+			waukeen.Transaction{Title: "King Tacos"},
+			waukeen.Rule{Type: waukeen.ReplaceRule, Match: "Tacos?", Result: "Tacos"},
 		},
 		{
 			waukeen.Transaction{Title: "Pizza Pizza"},

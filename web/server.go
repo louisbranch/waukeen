@@ -86,6 +86,17 @@ func (srv *Server) statementCreate(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintln(w, err)
 				return
 			}
+
+			for _, r := range waukeen.BootstrapTags {
+				r.AccountID = acc.ID
+				err := srv.Rules.Create(&r)
+				if err != nil {
+					w.WriteHeader(http.StatusBadRequest)
+					fmt.Fprintln(w, err)
+					return
+				}
+			}
+
 		}
 
 		if err != nil {

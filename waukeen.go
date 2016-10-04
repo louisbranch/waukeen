@@ -75,10 +75,6 @@ type AccountsDB interface {
 type TransactionsDB interface {
 	Create(t *Transaction) error
 	FindAll(acc string) ([]Transaction, error)
-	//Update(*Transaction) error
-	//Find(FITID string) (*Transaction, error)
-	//FindAll(end time.Time) ([]Transaction, error)
-	//Delete(*Transaction) error
 }
 
 type RulesDB interface {
@@ -88,6 +84,14 @@ type RulesDB interface {
 
 type TransactionTransformer interface {
 	Transform(*Transaction, Rule)
+}
+
+var BootstrapTags = []Rule{
+	{Type: ReplaceRule, Match: "toronto", Result: ""},
+	{Type: TagRule, Match: "pizza", Result: "food"},
+	{Type: TagRule, Match: "burger", Result: "food"},
+	{Type: TagRule, Match: "restaurant", Result: "food"},
+	{Type: TagRule, Match: "taco", Result: "food"},
 }
 
 func (t AccountType) String() string {

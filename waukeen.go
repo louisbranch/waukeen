@@ -26,7 +26,7 @@ const (
 type Account struct {
 	ID       string
 	Number   string
-	Alias    string
+	Name     string
 	Type     AccountType
 	Currency string
 	Balance  int64
@@ -38,7 +38,6 @@ type Transaction struct {
 	FITID       string
 	Type        TransactionType
 	Title       string
-	Alias       string
 	Description string
 	Amount      int64
 	Tags        []string

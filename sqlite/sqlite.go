@@ -29,7 +29,7 @@ func New(path string) (*DB, error) {
 		CREATE TABLE IF NOT EXISTS accounts(
 			id INTEGER PRIMARY KEY,
 			number TEXT NOT NULL,
-			alias TEXT,
+			name TEXT,
 			type INTEGER NOT NULL,
 			currency TEXT,
 			balance INTEGER
@@ -42,7 +42,6 @@ func New(path string) (*DB, error) {
 			fitid TEXT NOT NULL,
 			type INTEGER NOT NULL,
 			title TEXT NOT NULL,
-			alias TEXT,
 			description TEXT,
 			amount INTEGER,
 			date TEXT,
@@ -82,10 +81,10 @@ func (db *DB) Transactions() *Transactions {
 }
 
 func (db *Accounts) Create(a *waukeen.Account) error {
-	q := `INSERT into accounts (number, alias, type, currency, balance) values
+	q := `INSERT into accounts (number, name, type, currency, balance) values
 (?, ?, ?, ?, ?);`
 
-	res, err := db.Exec(q, a.Number, a.Alias, a.Type, a.Currency, a.Balance)
+	res, err := db.Exec(q, a.Number, a.Name, a.Type, a.Currency, a.Balance)
 
 	if err != nil {
 		return fmt.Errorf("error creating account: %s", err)
@@ -105,7 +104,7 @@ func (db *Accounts) Create(a *waukeen.Account) error {
 func (db *Accounts) FindAll() ([]waukeen.Account, error) {
 	var accounts []waukeen.Account
 
-	rows, err := db.Query("SELECT id, number, alias, type, currency, balance FROM accounts")
+	rows, err := db.Query("SELECT id, number, name, type, currency, balance FROM accounts")
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +112,7 @@ func (db *Accounts) FindAll() ([]waukeen.Account, error) {
 
 	for rows.Next() {
 		a := waukeen.Account{}
-		err = rows.Scan(&a.ID, &a.Number, &a.Alias, &a.Type, &a.Currency, &a.Balance)
+		err = rows.Scan(&a.ID, &a.Number, &a.Name, &a.Type, &a.Currency, &a.Balance)
 		if err != nil {
 			return nil, err
 		}
@@ -124,11 +123,11 @@ func (db *Accounts) FindAll() ([]waukeen.Account, error) {
 }
 
 func (db *Accounts) Find(number string) (*waukeen.Account, error) {
-	q := "SELECT id, number, alias, type, currency, balance FROM accounts where number = ?"
+	q := "SELECT id, number, name, type, currency, balance FROM accounts where number = ?"
 
 	a := &waukeen.Account{}
 
-	err := db.QueryRow(q, number).Scan(&a.ID, &a.Number, &a.Alias, &a.Type,
+	err := db.QueryRow(q, number).Scan(&a.ID, &a.Number, &a.Name, &a.Type,
 		&a.Currency, &a.Balance)
 
 	if err != nil {
@@ -140,19 +139,19 @@ func (db *Accounts) Find(number string) (*waukeen.Account, error) {
 
 func (db *Accounts) Update(a *waukeen.Account) error {
 	_, err := db.Exec(`
-	UPDATE accounts SET number=?, alias=?, type=?, currency=?, balance=?
-	where id = ?`, a.Number, a.Alias, a.Type, a.Currency, a.Balance, a.ID)
+	UPDATE accounts SET number=?, name=?, type=?, currency=?, balance=?
+	where id = ?`, a.Number, a.Name, a.Type, a.Currency, a.Balance, a.ID)
 	return err
 }
 
 func (db *Transactions) Create(acc string, t *waukeen.Transaction) error {
 	q := `INSERT into transactions
-	(account_id, fitid, type, title, alias, description, amount, tags, date)
+	(account_id, fitid, type, title, description, amount, tags, date)
 	values (?, ?, ?, ?, ?, ?, ?, ?, ?);`
 
 	tags := strings.Join(t.Tags, ",")
 
-	res, err := db.Exec(q, acc, t.FITID, t.Type, t.Title, t.Alias, t.Description,
+	res, err := db.Exec(q, acc, t.FITID, t.Type, t.Title, t.Description,
 		t.Amount, tags, t.Date)
 
 	if err != nil {
@@ -173,7 +172,7 @@ func (db *Transactions) Create(acc string, t *waukeen.Transaction) error {
 func (db *Transactions) FindAll(acc string) ([]waukeen.Transaction, error) {
 	var transactions []waukeen.Transaction
 
-	rows, err := db.Query(`SELECT id, account_id, type, title, alias, description,
+	rows, err := db.Query(`SELECT id, account_id, type, title, description,
 	amount, date, tags FROM transactions`)
 	if err != nil {
 		return nil, err
@@ -185,8 +184,8 @@ func (db *Transactions) FindAll(acc string) ([]waukeen.Transaction, error) {
 		var date string //FIXME
 
 		t := waukeen.Transaction{}
-		err = rows.Scan(&t.ID, &t.AccountID, &t.Type, &t.Title, &t.Alias,
-			&t.Description, &t.Amount, &date, &tags)
+		err = rows.Scan(&t.ID, &t.AccountID, &t.Type, &t.Title, &t.Description,
+			&t.Amount, &date, &tags)
 		if err != nil {
 			return nil, err
 		}
@@ -221,8 +220,7 @@ func (db *Rules) Create(r *waukeen.Rule) error {
 func (db *Rules) FindAll(acc string) ([]waukeen.Rule, error) {
 	var rules []waukeen.Rule
 
-	rows, err := db.Query(`SELECT id, account_id, type, title, alias, description,
-	amount, date, tags FROM rules`)
+	rows, err := db.Query(`SELECT id, account_id, type, match, result`)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +228,7 @@ func (db *Rules) FindAll(acc string) ([]waukeen.Rule, error) {
 
 	for rows.Next() {
 		r := waukeen.Rule{}
-		err = rows.Scan(&r.ID, &r.AccountID, &r.Type, &r.Result, &r.Match)
+		err = rows.Scan(&r.ID, &r.AccountID, &r.Type, &r.Match, &r.Result)
 		if err != nil {
 			return nil, err
 		}

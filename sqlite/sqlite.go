@@ -51,6 +51,9 @@ func New(path string) (*DB, error) {
 		);
 		`,
 		`
+		CREATE UNIQUE INDEX account_fitid ON transactions(account_id, fitid)
+		`,
+		`
 		CREATE TABLE IF NOT EXISTS rules(
 			id INTEGER PRIMARY KEY,
 			account_id INTEGER,
@@ -150,8 +153,8 @@ func (db *Accounts) Update(a *waukeen.Account) error {
 }
 
 func (db *Transactions) Create(t *waukeen.Transaction) error {
-	q := `INSERT into transactions
-	(account_id, fitid, type, title. alias, description, amount, tags, date)
+	q := `INSERT OR IGNORE into transactions
+	(account_id, fitid, type, title, alias, description, amount, tags, date)
 	values (?, ?, ?, ?, ?, ?, ?, ?, ?);`
 
 	tags := strings.Join(t.Tags, ",")

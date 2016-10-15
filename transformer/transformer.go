@@ -13,8 +13,10 @@ func (Text) Transform(t *waukeen.Transaction, r waukeen.Rule) {
 	re := regexp.MustCompile(`(?i)(^|\s)\Q` + r.Match + `\E($|\s)`)
 	switch r.Type {
 	case waukeen.ReplaceRule:
-		t.Title = re.ReplaceAllString(t.Title, "${1}"+r.Result+"${2}")
-		t.Title = strings.Trim(t.Title, " ")
+		alias := re.ReplaceAllString(t.Title, "${1}"+r.Result+"${2}")
+		if alias != t.Title {
+			t.Alias = strings.Trim(alias, " ")
+		}
 	case waukeen.TagRule:
 		if re.MatchString(t.Title) {
 			t.Tags = append(t.Tags, r.Result)

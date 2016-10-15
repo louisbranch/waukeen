@@ -43,6 +43,7 @@ type Transaction struct {
 	FITID       string
 	Type        TransactionType
 	Title       string
+	Alias       string
 	Description string
 	Amount      int64
 	Tags        []string

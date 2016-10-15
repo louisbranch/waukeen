@@ -42,6 +42,7 @@ func New(path string) (*DB, error) {
 			fitid TEXT NOT NULL,
 			type INTEGER NOT NULL,
 			title TEXT NOT NULL,
+			alias TEXT,
 			description TEXT,
 			amount INTEGER,
 			date TEXT,
@@ -150,13 +151,13 @@ func (db *Accounts) Update(a *waukeen.Account) error {
 
 func (db *Transactions) Create(t *waukeen.Transaction) error {
 	q := `INSERT into transactions
-	(account_id, fitid, type, title, description, amount, tags, date)
-	values (?, ?, ?, ?, ?, ?, ?, ?);`
+	(account_id, fitid, type, title. alias, description, amount, tags, date)
+	values (?, ?, ?, ?, ?, ?, ?, ?, ?);`
 
 	tags := strings.Join(t.Tags, ",")
 
-	res, err := db.Exec(q, t.AccountID, t.FITID, t.Type, t.Title, t.Description,
-		t.Amount, tags, t.Date)
+	res, err := db.Exec(q, t.AccountID, t.FITID, t.Type, t.Title, t.Alias,
+		t.Description, t.Amount, tags, t.Date)
 
 	if err != nil {
 		return fmt.Errorf("error creating transaction: %s", err)
@@ -176,7 +177,7 @@ func (db *Transactions) Create(t *waukeen.Transaction) error {
 func (db *Transactions) FindAll(acc string) ([]waukeen.Transaction, error) {
 	var transactions []waukeen.Transaction
 
-	rows, err := db.Query(`SELECT id, account_id, type, title, description,
+	rows, err := db.Query(`SELECT id, account_id, type, title, alias, description,
 	amount, date, tags FROM transactions`)
 	if err != nil {
 		return nil, err
@@ -188,8 +189,8 @@ func (db *Transactions) FindAll(acc string) ([]waukeen.Transaction, error) {
 		var date string //FIXME
 
 		t := waukeen.Transaction{}
-		err = rows.Scan(&t.ID, &t.AccountID, &t.Type, &t.Title, &t.Description,
-			&t.Amount, &date, &tags)
+		err = rows.Scan(&t.ID, &t.AccountID, &t.Type, &t.Title, &t.Alias,
+			&t.Description, &t.Amount, &date, &tags)
 		if err != nil {
 			return nil, err
 		}

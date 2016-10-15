@@ -202,7 +202,7 @@ func (db *Transactions) FindAll(acc string) ([]waukeen.Transaction, error) {
 
 func (db *Rules) Create(r *waukeen.Rule) error {
 	q := `INSERT into rules (account_id, type, match, result) values
-(?, ?, ?, ?);`
+		(?, ?, ?, ?);`
 
 	res, err := db.Exec(q, r.AccountID, r.Type, r.Match, r.Result)
 
@@ -224,7 +224,10 @@ func (db *Rules) Create(r *waukeen.Rule) error {
 func (db *Rules) FindAll(acc string) ([]waukeen.Rule, error) {
 	var rules []waukeen.Rule
 
-	rows, err := db.Query(`SELECT id, account_id, type, match, result from rules`)
+	stmt := `SELECT id, account_id, type, match, result from rules
+	where account_id = ? OR account_id = ""`
+
+	rows, err := db.Query(stmt, acc)
 	if err != nil {
 		return nil, err
 	}

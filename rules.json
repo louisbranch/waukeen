@@ -1,0 +1,21 @@
+[
+	{"type": "replace", "match": "toronto", "result": ""},
+	{"type": "tag", "match": "pizza", "result": "restaurants"},
+	{"type": "tag", "match": "burger", "result": "restaurants"},
+	{"type": "tag", "match": "burgers", "result": "restaurants"},
+	{"type": "tag", "match": "restaurant", "result": "restaurants"},
+	{"type": "tag", "match": "taco", "result": "restaurants"},
+	{"type": "tag", "match": "tacos", "result": "restaurants"},
+	{"type": "tag", "match": "burrito", "result": "restaurants"},
+	{"type": "tag", "match": "burritos", "result": "restaurants"},
+	{"type": "tag", "match": "subway", "result": "restaurants"},
+	{"type": "tag", "match": "cuisine", "result": "restaurants"},
+	{"type": "tag", "match": "eatery", "result": "restaurants"},
+	{"type": "tag", "match": "sushi", "result": "restaurants"},
+	{"type": "tag", "match": "chipotle", "result": "restaurants"},
+	{"type": "tag", "match": "loblaws", "result": "groceries"},
+	{"type": "tag", "match": "sobeys", "result": "groceries"},
+	{"type": "tag", "match": "cineplex", "result": "entertainment"},
+	{"type": "tag", "match": "LCBO/RAO", "result": "liquor"},
+	{"type": "tag", "match": "ttc", "result": "transportation"}
+]

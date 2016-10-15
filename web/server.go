@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -29,6 +30,7 @@ func (srv *Server) NewServeMux() *http.ServeMux {
 	mux.HandleFunc("/accounts", srv.accountsIndex)
 	mux.HandleFunc("/statements", srv.statementCreate)
 	mux.HandleFunc("/statements/new", srv.statementNew)
+	mux.HandleFunc("/rules/batch", srv.rulesBatch)
 	mux.HandleFunc("/rules/new", srv.rulesNew)
 	mux.HandleFunc("/rules", srv.rules)
 
@@ -85,16 +87,6 @@ func (srv *Server) statementCreate(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusBadRequest)
 				fmt.Fprintln(w, err)
 				return
-			}
-
-			for _, r := range waukeen.BootstrapTags {
-				r.AccountID = acc.ID
-				err := srv.Rules.Create(&r)
-				if err != nil {
-					w.WriteHeader(http.StatusBadRequest)
-					fmt.Fprintln(w, err)
-					return
-				}
 			}
 
 		}
@@ -236,6 +228,54 @@ func (srv *Server) rules(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
+		}
+
+		http.Redirect(w, r, "/rules", http.StatusFound)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func (srv *Server) rulesBatch(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		p := path.Join("web", "templates", "batch_rules.html")
+		t, err := template.ParseFiles(p)
+		if err == nil {
+			err = t.Execute(w, nil)
+		}
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	case "POST":
+		file, _, err := r.FormFile("rules")
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintln(w, err)
+			return
+		}
+
+		var rules []waukeen.Rule
+
+		dec := json.NewDecoder(file)
+
+		err = dec.Decode(&rules)
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintln(w, err)
+			return
+		}
+
+		for _, r := range rules {
+			err := srv.Rules.Create(&r)
+
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprintln(w, err)
+				return
+			}
+
 		}
 
 		http.Redirect(w, r, "/rules", http.StatusFound)

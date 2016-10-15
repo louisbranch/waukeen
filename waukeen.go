@@ -23,7 +23,8 @@ const (
 )
 
 const (
-	ReplaceRule RuleType = iota
+	UnknownRule RuleType = iota
+	ReplaceRule
 	TagRule
 )
 
@@ -86,28 +87,6 @@ type TransactionTransformer interface {
 	Transform(*Transaction, Rule)
 }
 
-var BootstrapTags = []Rule{
-	{Type: ReplaceRule, Match: "toronto", Result: ""},
-	{Type: TagRule, Match: "pizza", Result: "restaurants"},
-	{Type: TagRule, Match: "burger", Result: "restaurants"},
-	{Type: TagRule, Match: "burgers", Result: "restaurants"},
-	{Type: TagRule, Match: "restaurant", Result: "restaurants"},
-	{Type: TagRule, Match: "taco", Result: "restaurants"},
-	{Type: TagRule, Match: "tacos", Result: "restaurants"},
-	{Type: TagRule, Match: "burrito", Result: "restaurants"},
-	{Type: TagRule, Match: "burritos", Result: "restaurants"},
-	{Type: TagRule, Match: "subway", Result: "restaurants"},
-	{Type: TagRule, Match: "cuisine", Result: "restaurants"},
-	{Type: TagRule, Match: "eatery", Result: "restaurants"},
-	{Type: TagRule, Match: "sushi", Result: "restaurants"},
-	{Type: TagRule, Match: "chipotle", Result: "restaurants"},
-	{Type: TagRule, Match: "loblaws", Result: "groceries"},
-	{Type: TagRule, Match: "sobeys", Result: "groceries"},
-	{Type: TagRule, Match: "cineplex", Result: "entertainment"},
-	{Type: TagRule, Match: "LCBO/RAO", Result: "liquor"},
-	{Type: TagRule, Match: "ttc", Result: "transportation"},
-}
-
 func (t AccountType) String() string {
 	switch t {
 	case Checking:
@@ -127,5 +106,17 @@ func (t RuleType) String() string {
 	case TagRule:
 		return "Tagging"
 	}
-	return "Other"
+	return "Unknown"
+}
+
+func (t *RuleType) UnmarshalJSON(data []byte) error {
+	switch string(data) {
+	case `"replace"`:
+		*t = ReplaceRule
+	case `"tag"`:
+		*t = TagRule
+	default:
+		*t = UnknownRule
+	}
+	return nil
 }

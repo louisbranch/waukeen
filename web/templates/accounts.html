@@ -10,7 +10,7 @@
     <h3>{{.Account.Number}} ({{.Account.Type}})</h3>
     <ul>
       {{ range .Transactions }}
-      <li>{{.Title}} {{.Tags}}</li>
+      <li>{{ if .Alias }} {{ .Alias }} {{ else }} {{ .Title }} {{ end }} {{.Tags}}</li>
       {{ end }}
     </ul>
     {{ end }}

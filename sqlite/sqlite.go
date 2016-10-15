@@ -51,7 +51,8 @@ func New(path string) (*DB, error) {
 		);
 		`,
 		`
-		CREATE UNIQUE INDEX account_fitid ON transactions(account_id, fitid)
+		CREATE UNIQUE INDEX IF NOT EXISTS account_fitid ON
+		transactions(account_id, fitid)
 		`,
 		`
 		CREATE TABLE IF NOT EXISTS rules(

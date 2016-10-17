@@ -74,9 +74,16 @@ type AccountsDB interface {
 	Find(number string) (*Account, error)
 }
 
+type TransactionsDBOptions struct {
+	Account string
+	Start   time.Time
+	End     time.Time
+	Tags    []string
+}
+
 type TransactionsDB interface {
 	Create(t *Transaction) error
-	FindAll(acc string) ([]Transaction, error)
+	FindAll(TransactionsDBOptions) ([]Transaction, error)
 }
 
 type RulesDB interface {

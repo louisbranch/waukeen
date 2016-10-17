@@ -81,7 +81,7 @@ func newTransaction(res ofx.Transaction) waukeen.Transaction {
 		Title:       res.Name,
 		Description: res.Memo,
 		Amount:      int64(res.Amount * 100),
-		//FIXME Date:   res.DatePosted,
+		Date:        res.DatePosted.Time(),
 	}
 
 	switch res.TransactionType {

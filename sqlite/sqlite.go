@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/luizbranco/waukeen"
 	_ "github.com/mattn/go-sqlite3"
@@ -45,7 +46,7 @@ func New(path string) (*DB, error) {
 			alias TEXT,
 			description TEXT,
 			amount INTEGER,
-			date TEXT,
+			date DATETIME,
 			tags TEXT,
 			FOREIGN KEY(account_id) REFERENCES accounts(id)
 		);
@@ -178,7 +179,7 @@ func (db *Transactions) Create(t *waukeen.Transaction) error {
 	return nil
 }
 
-func (db *Transactions) FindAll(acc string) ([]waukeen.Transaction, error) {
+func (db *Transactions) FindAll(opts waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
 	var transactions []waukeen.Transaction
 
 	rows, err := db.Query(`SELECT id, account_id, type, title, alias, description,
@@ -190,11 +191,10 @@ func (db *Transactions) FindAll(acc string) ([]waukeen.Transaction, error) {
 
 	for rows.Next() {
 		var tags string
-		var date string //FIXME
 
 		t := waukeen.Transaction{}
 		err = rows.Scan(&t.ID, &t.AccountID, &t.Type, &t.Title, &t.Alias,
-			&t.Description, &t.Amount, &date, &tags)
+			&t.Description, &t.Amount, &t.Date, &tags)
 		if err != nil {
 			return nil, err
 		}
@@ -204,6 +204,9 @@ func (db *Transactions) FindAll(acc string) ([]waukeen.Transaction, error) {
 	err = rows.Err()
 	return transactions, err
 }
+
+func (db *Transactions) FindByTags(acc string)                     {}
+func (db *Transactions) FindByDate(start time.Time, end time.Time) {}
 
 func (db *Rules) Create(r *waukeen.Rule) error {
 	q := `INSERT into rules (account_id, type, match, result) values

@@ -1,6 +1,7 @@
 [
 	{"type": "replace", "match": "toronto", "result": ""},
 	{"type": "tag", "match": "pizza", "result": "restaurants"},
+	{"type": "tag", "match": "pizza", "result": "pizza"},
 	{"type": "tag", "match": "burger", "result": "restaurants"},
 	{"type": "tag", "match": "burgers", "result": "restaurants"},
 	{"type": "tag", "match": "restaurant", "result": "restaurants"},

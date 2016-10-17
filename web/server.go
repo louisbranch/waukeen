@@ -33,6 +33,7 @@ func (srv *Server) NewServeMux() *http.ServeMux {
 	mux.HandleFunc("/rules/batch", srv.rulesBatch)
 	mux.HandleFunc("/rules/new", srv.rulesNew)
 	mux.HandleFunc("/rules", srv.rules)
+	mux.HandleFunc("/", srv.index)
 
 	return mux
 }
@@ -142,7 +143,9 @@ func (srv *Server) accountsIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, a := range accs {
-		transactions, err := srv.Transactions.FindAll(a.ID)
+		transactions, err := srv.Transactions.FindAll(waukeen.TransactionsDBOptions{
+			Account: a.ID,
+		})
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -281,5 +284,20 @@ func (srv *Server) rulesBatch(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/rules", http.StatusFound)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func (srv *Server) index(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	p := path.Join("web", "templates", "index.html")
+	t, err := template.ParseFiles(p)
+	if err == nil {
+		err = t.Execute(w, nil)
+	}
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 }

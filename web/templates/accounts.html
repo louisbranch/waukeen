@@ -6,8 +6,31 @@
     <title>Accounts</title>
   </head>
   <body>
+    <form action="/accounts" method="post">
+      <div>
+        <label for="account">Account:</label>
+        <select name="account">
+          <option value="" selected>All</option>
+          {{ range .AccountContent }}
+            <option value="{{ .Account.ID }}">{{.Account.Number}}</option>
+          {{ end }}
+        </select>
+      </div>
+      <div>
+        <label for="start">From</label>
+        <input type="date" name="start">
+      </div>
+      <div>
+        <label for="end">To</label>
+        <input type="date" name="end">
+      </div>
+      <input type="submit" value="Search" />
+    </form>
     {{ range .AccountContent }}
     <h3>{{.Account.Number}} ({{.Account.Type}})</h3>
+    <div>
+      <strong>Total:</strong> {{ currency .Total }}
+    </div>
     <ul>
       {{ range .Transactions }}
       <li>
@@ -17,7 +40,7 @@
         {{ else }}
           {{ .Title }}:
         {{ end }}
-        $ {{ .Amount }}
+        {{ currency .Amount }}
         {{ if .Tags }}
           {{.Tags}}
         {{ end }}

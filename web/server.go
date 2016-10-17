@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"math"
 	"net/http"
 	"path"
 	"strconv"
+	"time"
 
 	"github.com/luizbranco/waukeen"
 )
@@ -21,13 +23,14 @@ type Server struct {
 
 type AccountContent struct {
 	Account      *waukeen.Account
+	Total        int64
 	Transactions []waukeen.Transaction
 }
 
 func (srv *Server) NewServeMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/accounts", srv.accountsIndex)
+	mux.HandleFunc("/accounts", srv.accounts)
 	mux.HandleFunc("/statements", srv.statementCreate)
 	mux.HandleFunc("/statements/new", srv.statementNew)
 	mux.HandleFunc("/rules/batch", srv.rulesBatch)
@@ -124,7 +127,7 @@ func (srv *Server) statementCreate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/accounts", http.StatusFound)
 }
 
-func (srv *Server) accountsIndex(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -134,18 +137,48 @@ func (srv *Server) accountsIndex(w http.ResponseWriter, r *http.Request) {
 		AccountContent []AccountContent
 	}{}
 
-	accs, err := srv.Accounts.FindAll()
+	opts := waukeen.TransactionsDBOptions{}
 
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err)
-		return
+	start := r.FormValue("start")
+	if start != "" {
+		t, err := time.Parse("2006-01-02", start)
+		if err != nil {
+			opts.Start = t
+		}
+	}
+
+	end := r.FormValue("end")
+	if end != "" {
+		t, err := time.Parse("2006-01-02", end)
+		if err != nil {
+			opts.End = t
+		}
+	}
+
+	var accs []waukeen.Account
+	var err error
+	number := r.FormValue("account")
+
+	if number != "" {
+		acc, err := srv.Accounts.Find(number)
+		if err != nil {
+			accs = append(accs, *acc)
+		}
+	}
+
+	if len(accs) == 0 {
+		accs, err = srv.Accounts.FindAll()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintln(w, err)
+			return
+		}
+
 	}
 
 	for _, a := range accs {
-		transactions, err := srv.Transactions.FindAll(waukeen.TransactionsDBOptions{
-			Account: a.ID,
-		})
+		opts.Account = a.ID
+		transactions, err := srv.Transactions.FindAll(opts)
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -153,21 +186,38 @@ func (srv *Server) accountsIndex(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		var total int64
+
+		for _, t := range transactions {
+			if t.Amount < 0 {
+				total += t.Amount
+			}
+		}
+
 		c := AccountContent{
 			Account:      &a,
+			Total:        total,
 			Transactions: transactions,
 		}
 
 		content.AccountContent = append(content.AccountContent, c)
 	}
 
+	fns := template.FuncMap{"currency": func(amount int64) string {
+		return fmt.Sprintf("$%.2f", math.Abs(float64(amount))/100)
+	}}
+
+	t := template.New("").Funcs(fns)
+
 	p := path.Join("web", "templates", "accounts.html")
-	t, err := template.ParseFiles(p)
+	t, err = t.ParseFiles(p)
 	if err == nil {
-		err = t.Execute(w, content)
+		t = t.Funcs(fns)
+		err = t.ExecuteTemplate(w, "accounts.html", content)
 	}
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, err.Error())
 	}
 }
 

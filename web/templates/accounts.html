@@ -11,10 +11,19 @@
         <label for="account">Account:</label>
         {{ $number := .Form.Account }}
         <select name="account">
-          <option value="" {{ if eq $number ""}} selected {{ end }}>All</option>
+          <option value="" {{ if eq $number "" }} selected {{ end }}>All</option>
           {{ range .AccountContent }}
             <option value="{{ .Account.Number }}" {{ if eq $number .Account.Number }} selected {{ end }} >{{ .Account.Number }}</option>
           {{ end }}
+        </select>
+      </div>
+      <div>
+        <label for="transaction_type">Type:</label>
+        {{ $type := .Form.Type }}
+        <select name="transaction_type">
+          <option value="" {{ if eq $type "" }} selected {{ end }}>All</option>
+          <option value="1" {{ if eq $type "1" }} selected {{ end }}>Credit</option>
+          <option value="2" {{ if eq $type "2" }} selected {{ end }}>Debit</option>
         </select>
       </div>
       <div>
@@ -26,28 +35,54 @@
         <input type="date" name="end" value="{{ .Form.End }}">
       </div>
       <input type="submit" value="Search" />
+      <a href="/accounts">Reset</a>
     </form>
     {{ range .AccountContent }}
-    <h3>{{.Account.Number}} ({{.Account.Type}})</h3>
-    <div>
-      <strong>Total:</strong> {{ currency .Total }}
-    </div>
-    <ul>
-      {{ range .Transactions }}
-      <li>
-        {{ .Date.Format "Jan 02" }} -
-        {{ if .Alias }}
-          {{ .Alias }}:
-        {{ else }}
-          {{ .Title }}:
+    <table>
+      <caption>
+        {{.Account.Number}} ({{.Account.Type}})
+      </caption>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Amount</th>
+          <th>Tags</th>
+        </tr>
+        <tr>
+          <th colspan="5">{{ currency .Total }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Transactions }}
+        <tr>
+          <td>
+            {{ .Date.Format "Jan 02" }}
+          </td>
+          <td>
+            {{ if .Alias }}
+              {{ .Alias }}:
+            {{ else }}
+              {{ .Title }}:
+            {{ end }}
+          </td>
+          <td>
+            {{ .Type }}
+          </td>
+          <td>
+            {{ currency .Amount }}
+          </td>
+          <td>
+            {{- range $index, $element := .Tags -}}
+              {{if $index}}, {{end}}
+              {{ $element }}
+            {{- end -}}
+          </td>
+        </tr>
         {{ end }}
-        {{ currency .Amount }}
-        {{ if .Tags }}
-          {{.Tags}}
-        {{ end }}
-      </li>
-      {{ end }}
-    </ul>
+      </tbody>
+    </table>
     {{ end }}
   </body>
 </html>

@@ -75,10 +75,11 @@ type AccountsDB interface {
 }
 
 type TransactionsDBOptions struct {
-	Account string
-	Start   time.Time
-	End     time.Time
-	Tags    []string
+	Accounts []string
+	Types    []TransactionType
+	Start    time.Time
+	End      time.Time
+	Tags     []string
 }
 
 type TransactionsDB interface {
@@ -103,6 +104,16 @@ func (t AccountType) String() string {
 		return "Savings"
 	case CreditCard:
 		return "Credit Card"
+	}
+	return "Other"
+}
+
+func (t TransactionType) String() string {
+	switch t {
+	case Debit:
+		return "Debit"
+	case Credit:
+		return "Credit"
 	}
 	return "Other"
 }

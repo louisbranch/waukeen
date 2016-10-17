@@ -138,7 +138,7 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 	start := r.FormValue("start")
 	if start != "" {
 		t, err := time.Parse("2006-01-02", start)
-		if err != nil {
+		if err == nil {
 			opts.Start = t
 		}
 	}
@@ -146,7 +146,7 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 	end := r.FormValue("end")
 	if end != "" {
 		t, err := time.Parse("2006-01-02", end)
-		if err != nil {
+		if err == nil {
 			opts.End = t
 		}
 	}
@@ -162,17 +162,26 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	ttype := r.FormValue("transaction_type")
+	if ttype != "" {
+		i, err := strconv.Atoi(ttype)
+		if err == nil {
+			opts.Types = []waukeen.TransactionType{waukeen.TransactionType(i)}
+		}
+	}
+
 	type form struct {
 		Account string
 		Start   string
 		End     string
+		Type    string
 	}
 
 	content := struct {
 		Form           form
 		AccountContent []AccountContent
 	}{
-		Form: form{Account: number, Start: start, End: end},
+		Form: form{Account: number, Start: start, End: end, Type: ttype},
 	}
 
 	if len(accs) == 0 {
@@ -186,7 +195,7 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, a := range accs {
-		opts.Account = a.ID
+		opts.Accounts = []string{a.ID}
 		transactions, err := srv.Transactions.FindAll(opts)
 
 		if err != nil {
@@ -198,9 +207,7 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 		var total int64
 
 		for _, t := range transactions {
-			if t.Amount < 0 {
-				total += t.Amount
-			}
+			total += t.Amount
 		}
 
 		c := AccountContent{

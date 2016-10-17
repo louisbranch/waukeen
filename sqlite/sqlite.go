@@ -3,9 +3,9 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/luizbranco/waukeen"
 	_ "github.com/mattn/go-sqlite3"
@@ -181,9 +181,45 @@ func (db *Transactions) Create(t *waukeen.Transaction) error {
 
 func (db *Transactions) FindAll(opts waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
 	var transactions []waukeen.Transaction
+	var clauses []string
 
-	rows, err := db.Query(`SELECT id, account_id, type, title, alias, description,
-	amount, date, tags FROM transactions`)
+	if len(opts.Accounts) > 0 {
+		clause := "account_id IN (" + strings.Join(opts.Accounts, " ,") + ")"
+		clauses = append(clauses, clause)
+	}
+
+	if len(opts.Types) > 0 {
+		var types []string
+
+		for _, t := range opts.Types {
+			types = append(types, strconv.Itoa(int(t)))
+		}
+
+		clause := "type IN (" + strings.Join(types, " ,") + ")"
+		clauses = append(clauses, clause)
+	}
+
+	for _, t := range opts.Tags {
+		clause := fmt.Sprintf("(',' || tags || ',') LIKE '%,%s,%'", t)
+		clauses = append(clauses, clause)
+	}
+
+	if !opts.Start.IsZero() {
+		clauses = append(clauses, "date >= "+opts.Start.Format("'2006-01-02'"))
+	}
+
+	if !opts.End.IsZero() {
+		clauses = append(clauses, "date <= "+opts.End.Format("'2006-01-02'"))
+	}
+
+	q := `SELECT id, account_id, type, title, alias, description, amount, date,
+	tags FROM transactions WHERE `
+
+	q += strings.Join(clauses, " AND ")
+
+	log.Println(q)
+
+	rows, err := db.Query(q)
 	if err != nil {
 		return nil, err
 	}
@@ -204,9 +240,6 @@ func (db *Transactions) FindAll(opts waukeen.TransactionsDBOptions) ([]waukeen.T
 	err = rows.Err()
 	return transactions, err
 }
-
-func (db *Transactions) FindByTags(acc string)                     {}
-func (db *Transactions) FindByDate(start time.Time, end time.Time) {}
 
 func (db *Rules) Create(r *waukeen.Rule) error {
 	q := `INSERT into rules (account_id, type, match, result) values

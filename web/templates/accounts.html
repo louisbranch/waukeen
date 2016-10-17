@@ -6,23 +6,24 @@
     <title>Accounts</title>
   </head>
   <body>
-    <form action="/accounts" method="post">
+    <form action="/accounts" method="get">
       <div>
         <label for="account">Account:</label>
+        {{ $number := .Form.Account }}
         <select name="account">
-          <option value="" selected>All</option>
+          <option value="" {{ if eq $number ""}} selected {{ end }}>All</option>
           {{ range .AccountContent }}
-            <option value="{{ .Account.ID }}">{{.Account.Number}}</option>
+            <option value="{{ .Account.Number }}" {{ if eq $number .Account.Number }} selected {{ end }} >{{ .Account.Number }}</option>
           {{ end }}
         </select>
       </div>
       <div>
         <label for="start">From</label>
-        <input type="date" name="start">
+        <input type="date" name="start" value="{{ .Form.Start }}">
       </div>
       <div>
         <label for="end">To</label>
-        <input type="date" name="end">
+        <input type="date" name="end" value="{{ .Form.End }}">
       </div>
       <input type="submit" value="Search" />
     </form>

@@ -133,10 +133,6 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	content := struct {
-		AccountContent []AccountContent
-	}{}
-
 	opts := waukeen.TransactionsDBOptions{}
 
 	start := r.FormValue("start")
@@ -161,9 +157,22 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 
 	if number != "" {
 		acc, err := srv.Accounts.Find(number)
-		if err != nil {
+		if err == nil {
 			accs = append(accs, *acc)
 		}
+	}
+
+	type form struct {
+		Account string
+		Start   string
+		End     string
+	}
+
+	content := struct {
+		Form           form
+		AccountContent []AccountContent
+	}{
+		Form: form{Account: number, Start: start, End: end},
 	}
 
 	if len(accs) == 0 {

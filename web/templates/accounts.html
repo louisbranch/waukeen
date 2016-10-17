@@ -27,6 +27,10 @@
         </select>
       </div>
       <div>
+        <label for="tags">Tags</label>
+        <input type="text" name="tags" value="{{- range $index, $element := .Form.Tags -}}{{if $index}}, {{end}}{{ $element }} {{- end -}}">
+      </div>
+      <div>
         <label for="start">From</label>
         <input type="date" name="start" value="{{ .Form.Start }}">
       </div>

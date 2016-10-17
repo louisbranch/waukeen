@@ -3,7 +3,6 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
@@ -199,9 +198,12 @@ func (db *Transactions) FindAll(opts waukeen.TransactionsDBOptions) ([]waukeen.T
 		clauses = append(clauses, clause)
 	}
 
-	for _, t := range opts.Tags {
-		clause := fmt.Sprintf("(',' || tags || ',') LIKE '%,%s,%'", t)
-		clauses = append(clauses, clause)
+	if len(opts.Tags) > 0 {
+		var tags []string
+		for _, t := range opts.Tags {
+			tags = append(tags, fmt.Sprintf(`(',' || tags || ',') LIKE '%%,%s,%%'`, t))
+		}
+		clauses = append(clauses, strings.Join(tags, " OR "))
 	}
 
 	if !opts.Start.IsZero() {
@@ -216,8 +218,6 @@ func (db *Transactions) FindAll(opts waukeen.TransactionsDBOptions) ([]waukeen.T
 	tags FROM transactions WHERE `
 
 	q += strings.Join(clauses, " AND ")
-
-	log.Println(q)
 
 	rows, err := db.Query(q)
 	if err != nil {

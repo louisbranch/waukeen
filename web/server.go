@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"path"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/luizbranco/waukeen"
@@ -170,18 +171,29 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	var tags []string
+	vals := strings.Split(r.FormValue("tags"), ",")
+	for _, t := range vals {
+		tag := strings.Trim(t, " ")
+		if tag != "" {
+			tags = append(tags, tag)
+		}
+	}
+	opts.Tags = tags
+
 	type form struct {
 		Account string
 		Start   string
 		End     string
 		Type    string
+		Tags    []string
 	}
 
 	content := struct {
 		Form           form
 		AccountContent []AccountContent
 	}{
-		Form: form{Account: number, Start: start, End: end, Type: ttype},
+		Form: form{Account: number, Start: start, End: end, Type: ttype, Tags: tags},
 	}
 
 	if len(accs) == 0 {

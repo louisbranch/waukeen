@@ -7,6 +7,7 @@ import (
 	"math"
 	"net/http"
 	"path"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -22,10 +23,19 @@ type Server struct {
 	Transformer  waukeen.TransactionTransformer
 }
 
+type TagCost struct {
+	Name  string
+	Count int
+	Total int64
+}
+
+type TagCosts []TagCost
+
 type AccountContent struct {
 	Account      *waukeen.Account
 	Total        int64
 	Transactions []waukeen.Transaction
+	TagCosts     []TagCost
 }
 
 func (srv *Server) NewServeMux() *http.ServeMux {
@@ -218,14 +228,40 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 
 		var total int64
 
+		tags := make(map[string]TagCost)
+
 		for _, t := range transactions {
+
+			for _, name := range t.Tags {
+				if name == "" {
+					name = "others"
+				}
+
+				tag := tags[name]
+				tag.Name = name
+				tag.Count += 1
+				tag.Total += t.Amount
+				tags[name] = tag
+			}
+
 			total += t.Amount
 		}
+
+		costs := make(TagCosts, len(tags))
+
+		i := 0
+		for _, t := range tags {
+			costs[i] = t
+			i += 1
+		}
+
+		sort.Sort(costs)
 
 		c := AccountContent{
 			Account:      &a,
 			Total:        total,
 			Transactions: transactions,
+			TagCosts:     costs,
 		}
 
 		content.AccountContent = append(content.AccountContent, c)
@@ -378,4 +414,24 @@ func (srv *Server) index(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
+}
+
+func (t TagCosts) Len() int {
+	return len(t)
+}
+
+func (t TagCosts) Less(i, j int) bool {
+	if t[i].Name == "others" {
+		return false
+	}
+
+	if t[j].Name == "others" {
+		return true
+	}
+
+	return strings.Compare(t[i].Name, t[j].Name) < 0
+}
+
+func (t TagCosts) Swap(i, j int) {
+	t[i], t[j] = t[j], t[i]
 }

@@ -42,6 +42,15 @@
       <a href="/accounts">Reset</a>
     </form>
     {{ range .AccountContent }}
+    <div>
+      <strong>Summary:</strong>
+      <ul>
+        {{ range .TagCosts }}
+          <li><strong>{{ .Name }}</strong>({{ .Count }}) {{ currency .Total }}</li>
+        {{ end }}
+      </ul>
+    </div>
+
     <table>
       <caption>
         {{.Account.Number}} ({{.Account.Type}})

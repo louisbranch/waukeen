@@ -35,11 +35,6 @@ func TestTextTransform(t *testing.T) {
 			waukeen.Transaction{Title: "King Tacos?", Alias: "King Tacos"},
 			waukeen.Rule{Type: waukeen.ReplaceRule, Match: "Tacos?", Result: "Tacos"},
 		},
-		{
-			waukeen.Transaction{Title: "Pizza Pizza"},
-			waukeen.Transaction{Title: "Pizza Pizza", Tags: []string{"food"}},
-			waukeen.Rule{Type: waukeen.TagRule, Match: "pizza", Result: "food"},
-		},
 	}
 
 	for _, eg := range egs {

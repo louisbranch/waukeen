@@ -19,7 +19,7 @@ func (Text) Transform(t *waukeen.Transaction, r waukeen.Rule) {
 		}
 	case waukeen.TagRule:
 		if re.MatchString(t.Title) {
-			t.Tags = append(t.Tags, r.Result)
+			//FIXME
 		}
 	}
 }

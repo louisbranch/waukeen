@@ -46,7 +46,6 @@ type Transaction struct {
 	Alias       string
 	Description string
 	Amount      int64
-	Tags        []string
 	Date        time.Time
 }
 

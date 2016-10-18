@@ -7,7 +7,6 @@ import (
 	"math"
 	"net/http"
 	"path"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -42,11 +41,11 @@ func (srv *Server) NewServeMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/accounts", srv.accounts)
-	mux.HandleFunc("/statements", srv.statementCreate)
-	mux.HandleFunc("/statements/new", srv.statementNew)
 	mux.HandleFunc("/rules/batch", srv.rulesBatch)
 	mux.HandleFunc("/rules/new", srv.rulesNew)
 	mux.HandleFunc("/rules", srv.rules)
+	mux.HandleFunc("/statements", srv.statementCreate)
+	mux.HandleFunc("/statements/new", srv.statementNew)
 	mux.HandleFunc("/", srv.index)
 
 	return mux
@@ -228,40 +227,10 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 
 		var total int64
 
-		tags := make(map[string]TagCost)
-
-		for _, t := range transactions {
-
-			for _, name := range t.Tags {
-				if name == "" {
-					name = "others"
-				}
-
-				tag := tags[name]
-				tag.Name = name
-				tag.Count += 1
-				tag.Total += t.Amount
-				tags[name] = tag
-			}
-
-			total += t.Amount
-		}
-
-		costs := make(TagCosts, len(tags))
-
-		i := 0
-		for _, t := range tags {
-			costs[i] = t
-			i += 1
-		}
-
-		sort.Sort(costs)
-
 		c := AccountContent{
 			Account:      &a,
 			Total:        total,
 			Transactions: transactions,
-			TagCosts:     costs,
 		}
 
 		content.AccountContent = append(content.AccountContent, c)

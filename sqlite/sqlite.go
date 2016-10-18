@@ -46,13 +46,30 @@ func New(path string) (*DB, error) {
 			description TEXT,
 			amount INTEGER,
 			date DATETIME,
-			tags TEXT,
 			FOREIGN KEY(account_id) REFERENCES accounts(id)
 		);
 		`,
 		`
 		CREATE UNIQUE INDEX IF NOT EXISTS account_fitid ON
 		transactions(account_id, fitid)
+		`,
+		`
+		CREATE TABLE IF NOT EXISTS tags(
+			id INTEGER PRIMARY KEY,
+			name TEXT NOT NULL UNIQUE
+		);
+		`,
+		`
+		CREATE TABLE IF NOT EXISTS transaction_tags(
+			transaction_id INTEGER NOT NULL,
+			tag_id INTEGER NOT NULL,
+			FOREIGN KEY(transaction_id) REFERENCES transactions(id)
+			FOREIGN KEY(tag_id) REFERENCES tags(id)
+		);
+		`,
+		`
+		CREATE UNIQUE INDEX IF NOT EXISTS transaction_tag ON
+		transaction_tags(transaction_id, tag_id)
 		`,
 		`
 		CREATE TABLE IF NOT EXISTS rules(
@@ -155,13 +172,11 @@ func (db *Accounts) Update(a *waukeen.Account) error {
 
 func (db *Transactions) Create(t *waukeen.Transaction) error {
 	q := `INSERT OR IGNORE into transactions
-	(account_id, fitid, type, title, alias, description, amount, tags, date)
-	values (?, ?, ?, ?, ?, ?, ?, ?, ?);`
-
-	tags := strings.Join(t.Tags, ",")
+	(account_id, fitid, type, title, alias, description, amount, date)
+	values (?, ?, ?, ?, ?, ?, ?, ?);`
 
 	res, err := db.Exec(q, t.AccountID, t.FITID, t.Type, t.Title, t.Alias,
-		t.Description, t.Amount, tags, t.Date)
+		t.Description, t.Amount, t.Date)
 
 	if err != nil {
 		return fmt.Errorf("error creating transaction: %s", err)
@@ -199,11 +214,7 @@ func (db *Transactions) FindAll(opts waukeen.TransactionsDBOptions) ([]waukeen.T
 	}
 
 	if len(opts.Tags) > 0 {
-		var tags []string
-		for _, t := range opts.Tags {
-			tags = append(tags, fmt.Sprintf(`(',' || tags || ',') LIKE '%%,%s,%%'`, t))
-		}
-		clauses = append(clauses, strings.Join(tags, " OR "))
+		//FIXME
 	}
 
 	if !opts.Start.IsZero() {
@@ -214,8 +225,8 @@ func (db *Transactions) FindAll(opts waukeen.TransactionsDBOptions) ([]waukeen.T
 		clauses = append(clauses, "date <= "+opts.End.Format("'2006-01-02'"))
 	}
 
-	q := `SELECT id, account_id, type, title, alias, description, amount, date,
-	tags FROM transactions WHERE `
+	q := `SELECT id, account_id, type, title, alias, description, amount, date
+	FROM transactions WHERE `
 
 	q += strings.Join(clauses, " AND ")
 
@@ -226,15 +237,12 @@ func (db *Transactions) FindAll(opts waukeen.TransactionsDBOptions) ([]waukeen.T
 	defer rows.Close()
 
 	for rows.Next() {
-		var tags string
-
 		t := waukeen.Transaction{}
 		err = rows.Scan(&t.ID, &t.AccountID, &t.Type, &t.Title, &t.Alias,
-			&t.Description, &t.Amount, &t.Date, &tags)
+			&t.Description, &t.Amount, &t.Date)
 		if err != nil {
 			return nil, err
 		}
-		t.Tags = strings.Split(tags, ",")
 		transactions = append(transactions, t)
 	}
 	err = rows.Err()

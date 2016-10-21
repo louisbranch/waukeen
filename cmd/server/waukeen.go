@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/luizbranco/waukeen/html"
 	"github.com/luizbranco/waukeen/sqlite"
 	"github.com/luizbranco/waukeen/transformer"
 	"github.com/luizbranco/waukeen/web"
@@ -12,7 +13,6 @@ import (
 )
 
 func main() {
-	importer := &xml.XML{}
 	db, err := sqlite.New("waukeen.db")
 
 	if err != nil {
@@ -20,11 +20,10 @@ func main() {
 	}
 
 	srv := &web.Server{
-		Statement:    importer,
-		Accounts:     db.Accounts(),
-		Transactions: db.Transactions(),
-		Rules:        db.Rules(),
-		Transformer:  transformer.Text{},
+		DB:          db,
+		Template:    html.New("html/templates"),
+		Statement:   &xml.XML{},
+		Transformer: transformer.Text{},
 	}
 	mux := srv.NewServeMux()
 

@@ -15,11 +15,10 @@ import (
 )
 
 type Server struct {
-	Statement    waukeen.StatementImporter
-	Accounts     waukeen.AccountsDB
-	Transactions waukeen.TransactionsDB
-	Rules        waukeen.RulesDB
-	Transformer  waukeen.TransactionTransformer
+	DB          waukeen.Database
+	Template    waukeen.Template
+	Statement   waukeen.StatementImporter
+	Transformer waukeen.TransactionTransformer
 }
 
 type TagCost struct {
@@ -44,29 +43,30 @@ func (srv *Server) NewServeMux() *http.ServeMux {
 	mux.HandleFunc("/rules/batch", srv.rulesBatch)
 	mux.HandleFunc("/rules/new", srv.rulesNew)
 	mux.HandleFunc("/rules", srv.rules)
-	mux.HandleFunc("/statements", srv.statementCreate)
-	mux.HandleFunc("/statements/new", srv.statementNew)
+	mux.HandleFunc("/statements", srv.createStatement)
+	mux.HandleFunc("/statements/new", srv.newStatement)
 	mux.HandleFunc("/", srv.index)
 
 	return mux
 }
 
-func (srv *Server) statementNew(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) render(w http.ResponseWriter, data interface{}, path ...string) {
+	err := srv.Template.Render(w, data, path...)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, err)
+	}
+}
+
+func (srv *Server) newStatement(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	p := path.Join("web", "templates", "statement.html")
-	t, err := template.ParseFiles(p)
-	if err == nil {
-		err = t.Execute(w, nil)
-	}
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
+	srv.render(w, nil, "statement")
 }
 
-func (srv *Server) statementCreate(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) createStatement(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -89,14 +89,14 @@ func (srv *Server) statementCreate(w http.ResponseWriter, r *http.Request) {
 	for _, stmt := range list {
 		number := stmt.Account.Number
 
-		acc, err := srv.Accounts.Find(number)
+		acc, err := srv.DB.FindAccount(number)
 
 		if err == nil {
 			acc.Balance = stmt.Account.Balance
-			err = srv.Accounts.Update(acc)
+			err = srv.DB.UpdateAccount(acc)
 		} else {
 			acc = &stmt.Account
-			err = srv.Accounts.Create(acc)
+			err = srv.DB.CreateAccount(acc)
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				fmt.Fprintln(w, err)
@@ -111,7 +111,7 @@ func (srv *Server) statementCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		rules, err := srv.Rules.FindAll(acc.ID)
+		rules, err := srv.DB.FindRules(acc.ID)
 
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -125,7 +125,7 @@ func (srv *Server) statementCreate(w http.ResponseWriter, r *http.Request) {
 			for _, r := range rules {
 				srv.Transformer.Transform(t, r)
 			}
-			err := srv.Transactions.Create(t)
+			err := srv.DB.CreateTransaction(t)
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				fmt.Fprintln(w, err)
@@ -166,7 +166,7 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 	number := r.FormValue("account")
 
 	if number != "" {
-		acc, err := srv.Accounts.Find(number)
+		acc, err := srv.DB.FindAccount(number)
 		if err == nil {
 			accs = append(accs, *acc)
 		}
@@ -206,7 +206,7 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(accs) == 0 {
-		accs, err = srv.Accounts.FindAll()
+		accs, err = srv.DB.FindAccounts()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintln(w, err)
@@ -217,7 +217,7 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 
 	for _, a := range accs {
 		opts.Accounts = []string{a.ID}
-		transactions, err := srv.Transactions.FindAll(opts)
+		transactions, err := srv.DB.FindTransactions(opts)
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -272,7 +272,7 @@ func (srv *Server) rulesNew(w http.ResponseWriter, r *http.Request) {
 func (srv *Server) rules(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		rules, err := srv.Rules.FindAll("")
+		rules, err := srv.DB.FindRules("")
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -309,7 +309,7 @@ func (srv *Server) rules(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = srv.Rules.Create(rule)
+		err = srv.DB.CreateRule(rule)
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -354,7 +354,7 @@ func (srv *Server) rulesBatch(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for _, r := range rules {
-			err := srv.Rules.Create(&r)
+			err := srv.DB.CreateRule(&r)
 
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)

@@ -49,6 +49,11 @@ type Transaction struct {
 	Date        time.Time
 }
 
+type Tag struct {
+	ID   string
+	Name string
+}
+
 type Rule struct {
 	ID        string
 	AccountID string
@@ -66,11 +71,17 @@ type StatementImporter interface {
 	Import(io.Reader) ([]Statement, error)
 }
 
-type AccountsDB interface {
-	Create(*Account) error
-	Update(*Account) error
-	FindAll() ([]Account, error)
-	Find(number string) (*Account, error)
+type Database interface {
+	CreateAccount(*Account) error
+	UpdateAccount(*Account) error
+	FindAccount(number string) (*Account, error)
+	FindAccounts() ([]Account, error)
+
+	CreateTransaction(t *Transaction) error
+	FindTransactions(TransactionsDBOptions) ([]Transaction, error)
+
+	CreateRule(*Rule) error
+	FindRules(acc string) ([]Rule, error)
 }
 
 type TransactionsDBOptions struct {
@@ -81,18 +92,12 @@ type TransactionsDBOptions struct {
 	Tags     []string
 }
 
-type TransactionsDB interface {
-	Create(t *Transaction) error
-	FindAll(TransactionsDBOptions) ([]Transaction, error)
-}
-
-type RulesDB interface {
-	Create(*Rule) error
-	FindAll(acc string) ([]Rule, error)
-}
-
 type TransactionTransformer interface {
 	Transform(*Transaction, Rule)
+}
+
+type Template interface {
+	Render(w io.Writer, data interface{}, paths ...string) error
 }
 
 func (t AccountType) String() string {

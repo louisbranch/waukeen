@@ -14,10 +14,6 @@ type DB struct {
 	*sql.DB
 }
 
-type Accounts DB
-type Transactions DB
-type Rules DB
-
 func New(path string) (*DB, error) {
 	db, err := sql.Open("sqlite3", "./waukeen.db")
 	if err != nil {
@@ -94,19 +90,7 @@ func New(path string) (*DB, error) {
 	return &DB{db}, nil
 }
 
-func (db *DB) Accounts() *Accounts {
-	return &Accounts{db.DB}
-}
-
-func (db *DB) Transactions() *Transactions {
-	return &Transactions{db.DB}
-}
-
-func (db *DB) Rules() *Rules {
-	return &Rules{db.DB}
-}
-
-func (db *Accounts) Create(a *waukeen.Account) error {
+func (db *DB) CreateAccount(a *waukeen.Account) error {
 	q := `INSERT into accounts (number, name, type, currency, balance) values
 (?, ?, ?, ?, ?);`
 
@@ -127,7 +111,7 @@ func (db *Accounts) Create(a *waukeen.Account) error {
 	return nil
 }
 
-func (db *Accounts) FindAll() ([]waukeen.Account, error) {
+func (db *DB) FindAccounts() ([]waukeen.Account, error) {
 	var accounts []waukeen.Account
 
 	rows, err := db.Query("SELECT id, number, name, type, currency, balance FROM accounts")
@@ -148,7 +132,7 @@ func (db *Accounts) FindAll() ([]waukeen.Account, error) {
 	return accounts, err
 }
 
-func (db *Accounts) Find(number string) (*waukeen.Account, error) {
+func (db *DB) FindAccount(number string) (*waukeen.Account, error) {
 	q := "SELECT id, number, name, type, currency, balance FROM accounts where number = ?"
 
 	a := &waukeen.Account{}
@@ -163,14 +147,14 @@ func (db *Accounts) Find(number string) (*waukeen.Account, error) {
 	return a, nil
 }
 
-func (db *Accounts) Update(a *waukeen.Account) error {
+func (db *DB) UpdateAccount(a *waukeen.Account) error {
 	_, err := db.Exec(`
 	UPDATE accounts SET number=?, name=?, type=?, currency=?, balance=?
 	where id = ?`, a.Number, a.Name, a.Type, a.Currency, a.Balance, a.ID)
 	return err
 }
 
-func (db *Transactions) Create(t *waukeen.Transaction) error {
+func (db *DB) CreateTransaction(t *waukeen.Transaction) error {
 	q := `INSERT OR IGNORE into transactions
 	(account_id, fitid, type, title, alias, description, amount, date)
 	values (?, ?, ?, ?, ?, ?, ?, ?);`
@@ -193,7 +177,7 @@ func (db *Transactions) Create(t *waukeen.Transaction) error {
 	return nil
 }
 
-func (db *Transactions) FindAll(opts waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
+func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
 	var transactions []waukeen.Transaction
 	var clauses []string
 
@@ -249,7 +233,7 @@ func (db *Transactions) FindAll(opts waukeen.TransactionsDBOptions) ([]waukeen.T
 	return transactions, err
 }
 
-func (db *Rules) Create(r *waukeen.Rule) error {
+func (db *DB) CreateRule(r *waukeen.Rule) error {
 	q := `INSERT into rules (account_id, type, match, result) values
 		(?, ?, ?, ?);`
 
@@ -270,7 +254,7 @@ func (db *Rules) Create(r *waukeen.Rule) error {
 	return nil
 }
 
-func (db *Rules) FindAll(acc string) ([]waukeen.Rule, error) {
+func (db *DB) FindRules(acc string) ([]waukeen.Rule, error) {
 	var rules []waukeen.Rule
 
 	stmt := `SELECT id, account_id, type, match, result from rules

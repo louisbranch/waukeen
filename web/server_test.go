@@ -46,52 +46,95 @@ func TestNewStatement(t *testing.T) {
 
 func TestCreateStatement(t *testing.T) {
 	importer := &mock.StatementImporter{}
+	db := &mock.Database{}
 
-	// Invalid Method
-	srv := &Server{Statement: importer}
-
-	req := httptest.NewRequest("GET", "/statements", nil)
-	res := httptest.NewRecorder()
-
-	srv.createStatement(res, req)
-
-	code := 405
-	if res.Code != code {
-		t.Errorf("wants %d status code, got %d", code, res.Code)
+	srv := &Server{
+		Statement: importer,
+		DB:        db,
 	}
 
-	// Missing File
-	importer.ImportMethod = func(io.Reader) ([]waukeen.Statement, error) {
-		return nil, errors.New("not implemented")
-	}
-	req = httptest.NewRequest("POST", "/statements", nil)
-	res = httptest.NewRecorder()
+	t.Run("Invalid Method", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/statements", nil)
+		res := httptest.NewRecorder()
 
-	srv.createStatement(res, req)
+		srv.createStatement(res, req)
 
-	code = 400
-	if res.Code != code {
-		t.Errorf("wants %d status code, got %d", code, res.Code)
-	}
+		code := 405
+		if res.Code != code {
+			t.Errorf("wants %d status code, got %d", code, res.Code)
+		}
+	})
 
-	// Empty File
+	t.Run("Missing File", func(t *testing.T) {
+		importer.ImportMethod = func(io.Reader) ([]waukeen.Statement, error) {
+			return nil, errors.New("not implemented")
+		}
+		req := httptest.NewRequest("POST", "/statements", nil)
+		res := httptest.NewRecorder()
 
-	importer.ImportMethod = func(io.Reader) ([]waukeen.Statement, error) {
-		return nil, nil
-	}
+		srv.createStatement(res, req)
 
-	req, err := fileUpload("statement", "/statements", "../mock/cc.ofx")
-	if err != nil {
-		t.Error(err)
-	}
-	res = httptest.NewRecorder()
+		code := 400
+		if res.Code != code {
+			t.Errorf("wants %d status code, got %d", code, res.Code)
+		}
+	})
 
-	srv.createStatement(res, req)
+	t.Run("Empty File", func(t *testing.T) {
+		importer.ImportMethod = func(io.Reader) ([]waukeen.Statement, error) {
+			return nil, nil
+		}
+		req, err := fileUpload("statement", "/statements", "../mock/cc.ofx")
+		if err != nil {
+			t.Error(err)
+		}
+		res := httptest.NewRecorder()
 
-	code = 200
-	if res.Code != code {
-		t.Errorf("wants %d status code, got %d (%s)", code, res.Code, res.Body)
-	}
+		srv.createStatement(res, req)
+
+		code := 500
+		if res.Code != code {
+			t.Errorf("wants %d status code, got %d (%s)", code, res.Code, res.Body)
+		}
+
+		/*
+			url := "/accounts"
+			loc := res.Header().Get("Location")
+
+			if url != loc {
+				t.Errorf("wants %s redirect url, got %s", url, loc)
+			}
+		*/
+	})
+
+	t.Run("New Account Error", func(t *testing.T) {
+		importer.ImportMethod = func(io.Reader) ([]waukeen.Statement, error) {
+			return []waukeen.Statement{{
+				Account: waukeen.Account{Number: "12345"},
+			}}, nil
+		}
+
+		db.FindAccountMethod = func(number string) (*waukeen.Account, error) {
+			return nil, errors.New("account not found")
+		}
+
+		db.CreateAccountMethod = func(*waukeen.Account) error {
+			return errors.New("account not found")
+		}
+
+		req, err := fileUpload("statement", "/statements", "../mock/cc.ofx")
+		if err != nil {
+			t.Error(err)
+		}
+		res := httptest.NewRecorder()
+
+		srv.createStatement(res, req)
+
+		code := 500
+		if res.Code != code {
+			t.Errorf("wants %d status code, got %d (%s)", code, res.Code, res.Body)
+		}
+	})
 }
 
 func fileUpload(name, uri, path string) (*http.Request, error) {
@@ -111,6 +154,7 @@ func fileUpload(name, uri, path string) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+	writer.Close()
 
 	req, err := http.NewRequest("POST", uri, body)
 	if err != nil {

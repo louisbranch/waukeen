@@ -82,6 +82,8 @@ type Database interface {
 
 	CreateRule(*Rule) error
 	FindRules(acc string) ([]Rule, error)
+
+	CreateStatement(Statement) error
 }
 
 type TransactionsDBOptions struct {

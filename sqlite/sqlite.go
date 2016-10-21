@@ -277,3 +277,41 @@ func (db *DB) FindRules(acc string) ([]waukeen.Rule, error) {
 	err = rows.Err()
 	return rules, err
 }
+
+func (db *DB) CreateStatement(stmt waukeen.Statement) error {
+	number := stmt.Account.Number
+
+	acc, err := db.FindAccount(number)
+
+	if err == nil {
+		acc.Balance = stmt.Account.Balance
+		err = db.UpdateAccount(acc)
+	} else {
+		acc = &stmt.Account
+		err = db.CreateAccount(acc)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	rules, err := db.FindRules(acc.ID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, tn := range stmt.Transactions {
+		t := &tn
+		t.AccountID = acc.ID
+		for _, r := range rules {
+			db.Transform(t, r)
+		}
+		err := db.CreateTransaction(t)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

@@ -47,6 +47,7 @@ type Transaction struct {
 	Description string
 	Amount      int64
 	Date        time.Time
+	Tags        []string
 }
 
 type Tag struct {
@@ -83,7 +84,7 @@ type Database interface {
 	CreateRule(*Rule) error
 	FindRules(acc string) ([]Rule, error)
 
-	CreateStatement(Statement) error
+	CreateStatement(Statement, TransactionTransformer) error
 }
 
 type TransactionsDBOptions struct {

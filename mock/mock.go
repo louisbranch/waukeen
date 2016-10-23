@@ -22,6 +22,14 @@ func (m *StatementImporter) Import(in io.Reader) ([]waukeen.Statement, error) {
 	return m.ImportMethod(in)
 }
 
+type TransactionTransformer struct {
+	TransformMethod func(*waukeen.Transaction, waukeen.Rule)
+}
+
+func (m *TransactionTransformer) Transform(t *waukeen.Transaction, r waukeen.Rule) {
+	m.TransformMethod(t, r)
+}
+
 type Database struct {
 	CreateAccountMethod func(*waukeen.Account) error
 	UpdateAccountMethod func(*waukeen.Account) error
@@ -34,7 +42,7 @@ type Database struct {
 	CreateRuleMethod func(*waukeen.Rule) error
 	FindRulesMethod  func(acc string) ([]waukeen.Rule, error)
 
-	CreateStatementMethod func(waukeen.Statement) error
+	CreateStatementMethod func(waukeen.Statement, waukeen.TransactionTransformer) error
 }
 
 func (m *Database) CreateAccount(a *waukeen.Account) error {
@@ -69,6 +77,6 @@ func (m *Database) FindRules(acc string) ([]waukeen.Rule, error) {
 	return m.FindRulesMethod(acc)
 }
 
-func (m *Database) CreateStatement(s waukeen.Statement) error {
-	return m.CreateStatementMethod(s)
+func (m *Database) CreateStatement(s waukeen.Statement, t waukeen.TransactionTransformer) error {
+	return m.CreateStatementMethod(s, t)
 }

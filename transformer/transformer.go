@@ -18,8 +18,18 @@ func (Text) Transform(t *waukeen.Transaction, r waukeen.Rule) {
 			t.Alias = strings.Trim(alias, " ")
 		}
 	case waukeen.TagRule:
-		if re.MatchString(t.Title) {
-			//FIXME
+		if !re.MatchString(t.Title) {
+			return
+		}
+		found := false
+		for _, t := range t.Tags {
+			if t == r.Result {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Tags = append(t.Tags, r.Result)
 		}
 	}
 }

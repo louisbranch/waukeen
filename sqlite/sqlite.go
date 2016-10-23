@@ -278,7 +278,8 @@ func (db *DB) FindRules(acc string) ([]waukeen.Rule, error) {
 	return rules, err
 }
 
-func (db *DB) CreateStatement(stmt waukeen.Statement) error {
+func (db *DB) CreateStatement(stmt waukeen.Statement,
+	transformer waukeen.TransactionTransformer) error {
 	number := stmt.Account.Number
 
 	acc, err := db.FindAccount(number)
@@ -305,7 +306,7 @@ func (db *DB) CreateStatement(stmt waukeen.Statement) error {
 		t := &tn
 		t.AccountID = acc.ID
 		for _, r := range rules {
-			db.Transform(t, r)
+			transformer.Transform(t, r)
 		}
 		err := db.CreateTransaction(t)
 		if err != nil {

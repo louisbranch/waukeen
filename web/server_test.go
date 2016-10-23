@@ -92,33 +92,21 @@ func TestCreateStatement(t *testing.T) {
 
 		srv.createStatement(res, req)
 
-		code := 500
+		code := 400
 		if res.Code != code {
 			t.Errorf("wants %d status code, got %d (%s)", code, res.Code, res.Body)
 		}
 
-		/*
-			url := "/accounts"
-			loc := res.Header().Get("Location")
-
-			if url != loc {
-				t.Errorf("wants %s redirect url, got %s", url, loc)
-			}
-		*/
 	})
 
-	t.Run("New Account Error", func(t *testing.T) {
+	t.Run("Statement Error", func(t *testing.T) {
 		importer.ImportMethod = func(io.Reader) ([]waukeen.Statement, error) {
 			return []waukeen.Statement{{
 				Account: waukeen.Account{Number: "12345"},
 			}}, nil
 		}
 
-		db.FindAccountMethod = func(number string) (*waukeen.Account, error) {
-			return nil, errors.New("account not found")
-		}
-
-		db.CreateAccountMethod = func(*waukeen.Account) error {
+		db.CreateStatementMethod = func(waukeen.Statement, waukeen.TransactionTransformer) error {
 			return errors.New("account not found")
 		}
 
@@ -133,6 +121,38 @@ func TestCreateStatement(t *testing.T) {
 		code := 500
 		if res.Code != code {
 			t.Errorf("wants %d status code, got %d (%s)", code, res.Code, res.Body)
+		}
+	})
+
+	t.Run("Statement(s) Successfully Imported", func(t *testing.T) {
+		importer.ImportMethod = func(io.Reader) ([]waukeen.Statement, error) {
+			return []waukeen.Statement{{
+				Account: waukeen.Account{Number: "12345"},
+			}}, nil
+		}
+
+		db.CreateStatementMethod = func(waukeen.Statement, waukeen.TransactionTransformer) error {
+			return nil
+		}
+
+		req, err := fileUpload("statement", "/statements", "../mock/cc.ofx")
+		if err != nil {
+			t.Error(err)
+		}
+		res := httptest.NewRecorder()
+
+		srv.createStatement(res, req)
+
+		code := 302
+		if res.Code != code {
+			t.Errorf("wants %d status code, got %d (%s)", code, res.Code, res.Body)
+		}
+
+		url := "/accounts"
+		loc := res.Header().Get("Location")
+
+		if url != loc {
+			t.Errorf("wants %s redirect url, got %s", url, loc)
 		}
 	})
 }

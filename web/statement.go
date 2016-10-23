@@ -38,10 +38,13 @@ func (srv *Server) createStatement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err)
-		return
+	for _, item := range list {
+		err = srv.DB.CreateStatement(item, srv.Transformer)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintln(w, err)
+			return
+		}
 	}
 
 	http.Redirect(w, r, "/accounts", http.StatusFound)

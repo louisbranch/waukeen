@@ -16,32 +16,25 @@ import (
 )
 
 func TestNewStatement(t *testing.T) {
-	tpl := &mock.Template{}
-	srv := &Server{Template: tpl}
+	t.Run("Invalid Method", func(t *testing.T) {
+		req := httptest.NewRequest("POST", "/statements/new", nil)
+		res := ServerTest(nil, req)
 
-	req := httptest.NewRequest("GET", "/statements/new", nil)
-	res := httptest.NewRecorder()
+		code := 405
+		if res.Code != code {
+			t.Errorf("wants %d status code, got %d", code, res.Code)
+		}
+	})
 
-	tpl.RenderMethod = func(io.Writer, interface{}, ...string) error {
-		return nil
-	}
+	t.Run("Valid Method", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/statements/new", nil)
+		res := ServerTest(nil, req)
 
-	srv.newStatement(res, req)
-
-	code := 200
-	if res.Code != code {
-		t.Errorf("wants %d status code, got %d", code, res.Code)
-	}
-
-	req = httptest.NewRequest("POST", "/statements/new", nil)
-	res = httptest.NewRecorder()
-
-	srv.newStatement(res, req)
-
-	code = 405
-	if res.Code != code {
-		t.Errorf("wants %d status code, got %d", code, res.Code)
-	}
+		code := 200
+		if res.Code != code {
+			t.Errorf("wants %d status code, got %d", code, res.Code)
+		}
+	})
 }
 
 func TestCreateStatement(t *testing.T) {
@@ -55,9 +48,7 @@ func TestCreateStatement(t *testing.T) {
 
 	t.Run("Invalid Method", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/statements", nil)
-		res := httptest.NewRecorder()
-
-		srv.createStatement(res, req)
+		res := ServerTest(srv, req)
 
 		code := 405
 		if res.Code != code {
@@ -70,9 +61,7 @@ func TestCreateStatement(t *testing.T) {
 			return nil, errors.New("not implemented")
 		}
 		req := httptest.NewRequest("POST", "/statements", nil)
-		res := httptest.NewRecorder()
-
-		srv.createStatement(res, req)
+		res := ServerTest(srv, req)
 
 		code := 400
 		if res.Code != code {
@@ -88,9 +77,7 @@ func TestCreateStatement(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		res := httptest.NewRecorder()
-
-		srv.createStatement(res, req)
+		res := ServerTest(srv, req)
 
 		code := 400
 		if res.Code != code {
@@ -114,9 +101,7 @@ func TestCreateStatement(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		res := httptest.NewRecorder()
-
-		srv.createStatement(res, req)
+		res := ServerTest(srv, req)
 
 		code := 500
 		if res.Code != code {
@@ -139,9 +124,8 @@ func TestCreateStatement(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		res := httptest.NewRecorder()
 
-		srv.createStatement(res, req)
+		res := ServerTest(srv, req)
 
 		code := 302
 		if res.Code != code {

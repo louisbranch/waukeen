@@ -59,3 +59,9 @@ func (h *HTML) parse(names ...string) (tpl *template.Template, err error) {
 
 	return tpl, nil
 }
+
+/*
+	fns := template.FuncMap{"currency": func(amount int64) string {
+		return fmt.Sprintf("$%.2f", math.Abs(float64(amount))/100)
+	}}
+*/

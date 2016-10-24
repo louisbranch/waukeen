@@ -2,10 +2,7 @@ package web
 
 import (
 	"fmt"
-	"html/template"
-	"math"
 	"net/http"
-	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -64,7 +61,9 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 			tags = append(tags, tag)
 		}
 	}
-	opts.Tags = tags
+	if len(tags) > 0 {
+		opts.Tags = tags
+	}
 
 	type form struct {
 		Account string
@@ -112,20 +111,5 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 		content.AccountContent = append(content.AccountContent, c)
 	}
 
-	fns := template.FuncMap{"currency": func(amount int64) string {
-		return fmt.Sprintf("$%.2f", math.Abs(float64(amount))/100)
-	}}
-
-	t := template.New("").Funcs(fns)
-
-	p := path.Join("web", "templates", "accounts.html")
-	t, err = t.ParseFiles(p)
-	if err == nil {
-		t = t.Funcs(fns)
-		err = t.ExecuteTemplate(w, "accounts.html", content)
-	}
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, err.Error())
-	}
+	srv.render(w, content, "accounts")
 }

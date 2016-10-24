@@ -15,7 +15,7 @@ type DB struct {
 }
 
 func New(path string) (*DB, error) {
-	db, err := sql.Open("sqlite3", "./waukeen.db")
+	db, err := sql.Open("sqlite3", path)
 	if err != nil {
 		return nil, err
 	}
@@ -24,7 +24,7 @@ func New(path string) (*DB, error) {
 		`
 		CREATE TABLE IF NOT EXISTS accounts(
 			id INTEGER PRIMARY KEY,
-			number TEXT NOT NULL,
+			number TEXT NOT NULL CHECK(number <> ''),
 			name TEXT,
 			type INTEGER NOT NULL,
 			currency TEXT,

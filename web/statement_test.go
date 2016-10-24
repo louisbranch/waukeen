@@ -1,15 +1,9 @@
 package web
 
 import (
-	"bytes"
 	"errors"
 	"io"
-	"io/ioutil"
-	"log"
-	"mime/multipart"
-	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/luizbranco/waukeen"
@@ -19,7 +13,7 @@ import (
 func TestNewStatement(t *testing.T) {
 	t.Run("Invalid Method", func(t *testing.T) {
 		req := httptest.NewRequest("POST", "/statements/new", nil)
-		res := ServerTest(nil, req)
+		res := serverTest(nil, req)
 
 		code := 405
 		if res.Code != code {
@@ -29,7 +23,7 @@ func TestNewStatement(t *testing.T) {
 
 	t.Run("Valid Method", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/statements/new", nil)
-		res := ServerTest(nil, req)
+		res := serverTest(nil, req)
 
 		code := 200
 		if res.Code != code {
@@ -49,7 +43,7 @@ func TestCreateStatement(t *testing.T) {
 
 	t.Run("Invalid Method", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/statements", nil)
-		res := ServerTest(srv, req)
+		res := serverTest(srv, req)
 
 		code := 405
 		if res.Code != code {
@@ -62,7 +56,7 @@ func TestCreateStatement(t *testing.T) {
 			return nil, errors.New("not implemented")
 		}
 		req := httptest.NewRequest("POST", "/statements", nil)
-		res := ServerTest(srv, req)
+		res := serverTest(srv, req)
 
 		code := 400
 		if res.Code != code {
@@ -75,7 +69,7 @@ func TestCreateStatement(t *testing.T) {
 			return nil, nil
 		}
 		req := fileUpload("statement", "/statements")
-		res := ServerTest(srv, req)
+		res := serverTest(srv, req)
 
 		code := 400
 		if res.Code != code {
@@ -96,7 +90,7 @@ func TestCreateStatement(t *testing.T) {
 		}
 
 		req := fileUpload("statement", "/statements")
-		res := ServerTest(srv, req)
+		res := serverTest(srv, req)
 
 		code := 500
 		if res.Code != code {
@@ -116,7 +110,7 @@ func TestCreateStatement(t *testing.T) {
 		}
 
 		req := fileUpload("statement", "/statements")
-		res := ServerTest(srv, req)
+		res := serverTest(srv, req)
 
 		code := 302
 		if res.Code != code {
@@ -130,32 +124,4 @@ func TestCreateStatement(t *testing.T) {
 			t.Errorf("wants %s redirect url, got %s", url, loc)
 		}
 	})
-}
-
-func fileUpload(name, uri string) *http.Request {
-	tmpfile, err := ioutil.TempFile("", "example")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove(tmpfile.Name())
-
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile(name, tmpfile.Name())
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, err = io.Copy(part, tmpfile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	writer.Close()
-
-	req, err := http.NewRequest("POST", uri, body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-
-	return req
 }

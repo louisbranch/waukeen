@@ -16,7 +16,7 @@ import (
 func TestNewRule(t *testing.T) {
 	t.Run("Invalid Method", func(t *testing.T) {
 		req := httptest.NewRequest("POST", "/rules/new", nil)
-		res := ServerTest(nil, req)
+		res := serverTest(nil, req)
 
 		code := 405
 		if res.Code != code {
@@ -26,7 +26,7 @@ func TestNewRule(t *testing.T) {
 
 	t.Run("Valid Method", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/rules/new", nil)
-		res := ServerTest(nil, req)
+		res := serverTest(nil, req)
 
 		code := 200
 		if res.Code != code {
@@ -38,7 +38,7 @@ func TestNewRule(t *testing.T) {
 func TestRules(t *testing.T) {
 	t.Run("Invalid Method", func(t *testing.T) {
 		req := httptest.NewRequest("DELETE", "/rules", nil)
-		res := ServerTest(nil, req)
+		res := serverTest(nil, req)
 
 		code := 405
 		if res.Code != code {
@@ -54,7 +54,7 @@ func TestRules(t *testing.T) {
 		srv := &Server{DB: db}
 
 		req := httptest.NewRequest("GET", "/rules", nil)
-		res := ServerTest(srv, req)
+		res := serverTest(srv, req)
 
 		code := 500
 		if res.Code != code {
@@ -70,7 +70,7 @@ func TestRules(t *testing.T) {
 		srv := &Server{DB: db}
 
 		req := httptest.NewRequest("GET", "/rules", nil)
-		res := ServerTest(srv, req)
+		res := serverTest(srv, req)
 
 		code := 200
 		if res.Code != code {
@@ -83,7 +83,7 @@ func TestRules(t *testing.T) {
 		req.Form = url.Values{}
 		req.Form.Set("type", "a")
 
-		res := ServerTest(nil, req)
+		res := serverTest(nil, req)
 
 		code := 400
 		if res.Code != code {
@@ -102,7 +102,7 @@ func TestRules(t *testing.T) {
 		req.Form = url.Values{}
 		req.Form.Set("type", "1")
 
-		res := ServerTest(srv, req)
+		res := serverTest(srv, req)
 
 		code := 400
 		if res.Code != code {
@@ -134,7 +134,7 @@ func TestRules(t *testing.T) {
 		req.Form.Set("match", rule.Match)
 		req.Form.Set("result", rule.Result)
 
-		res := ServerTest(srv, req)
+		res := serverTest(srv, req)
 
 		code := 302
 		if res.Code != code {
@@ -153,7 +153,7 @@ func TestRules(t *testing.T) {
 func TestImportRules(t *testing.T) {
 	t.Run("Invalid Method", func(t *testing.T) {
 		req := httptest.NewRequest("DELETE", "/rules/import", nil)
-		res := ServerTest(nil, req)
+		res := serverTest(nil, req)
 
 		code := 405
 		if res.Code != code {
@@ -163,7 +163,7 @@ func TestImportRules(t *testing.T) {
 
 	t.Run("Get rules", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/rules/import", nil)
-		res := ServerTest(nil, req)
+		res := serverTest(nil, req)
 
 		code := 200
 		if res.Code != code {
@@ -179,7 +179,7 @@ func TestImportRules(t *testing.T) {
 		srv := &Server{RuleImporter: importer}
 
 		req := fileUpload("rules", "/rules/import")
-		res := ServerTest(srv, req)
+		res := serverTest(srv, req)
 
 		code := 400
 		if res.Code != code {
@@ -199,7 +199,7 @@ func TestImportRules(t *testing.T) {
 		srv := &Server{RuleImporter: importer, DB: db}
 
 		req := fileUpload("rules", "/rules/import")
-		res := ServerTest(srv, req)
+		res := serverTest(srv, req)
 
 		code := 400
 		if res.Code != code {
@@ -228,7 +228,7 @@ func TestImportRules(t *testing.T) {
 		srv := &Server{RuleImporter: importer, DB: db}
 
 		req := fileUpload("rules", "/rules/import")
-		res := ServerTest(srv, req)
+		res := serverTest(srv, req)
 
 		code := 302
 		if res.Code != code {

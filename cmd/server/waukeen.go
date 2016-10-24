@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/luizbranco/waukeen/html"
+	"github.com/luizbranco/waukeen/json"
 	"github.com/luizbranco/waukeen/sqlite"
 	"github.com/luizbranco/waukeen/transformer"
 	"github.com/luizbranco/waukeen/web"
@@ -20,10 +21,11 @@ func main() {
 	}
 
 	srv := &web.Server{
-		DB:          db,
-		Template:    html.New("html/templates"),
-		Statement:   &xml.XML{},
-		Transformer: transformer.Text{},
+		DB:                db,
+		Template:          html.New("html/templates"),
+		StatementImporter: &xml.Statement{},
+		RuleImporter:      &json.Rules{},
+		Transformer:       transformer.Text{},
 	}
 	mux := srv.NewServeMux()
 

@@ -1,11 +1,8 @@
 package web
 
 import (
-	"encoding/json"
 	"fmt"
-	"html/template"
 	"net/http"
-	"path"
 	"strconv"
 
 	"github.com/luizbranco/waukeen"
@@ -30,20 +27,13 @@ func (srv *Server) rules(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		p := path.Join("web", "templates", "rules.html")
-		t, err := template.ParseFiles(p)
-		if err == nil {
-			err = t.Execute(w, rules)
-		}
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+		srv.render(w, rules, "rules")
 	case "POST":
 		t := r.FormValue("type")
 		n, err := strconv.Atoi(t)
 
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
@@ -54,15 +44,10 @@ func (srv *Server) rules(w http.ResponseWriter, r *http.Request) {
 			Result:    r.FormValue("result"),
 		}
 
-		if rule.Match == "" {
-			http.Redirect(w, r, "/rules/new", http.StatusFound)
-			return
-		}
-
 		err = srv.DB.CreateRule(rule)
 
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
@@ -75,14 +60,7 @@ func (srv *Server) rules(w http.ResponseWriter, r *http.Request) {
 func (srv *Server) importRules(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		p := path.Join("web", "templates", "batch_rules.html")
-		t, err := template.ParseFiles(p)
-		if err == nil {
-			err = t.Execute(w, nil)
-		}
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+		srv.render(w, nil, "import_rules")
 	case "POST":
 		file, _, err := r.FormFile("rules")
 		if err != nil {
@@ -91,11 +69,7 @@ func (srv *Server) importRules(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		var rules []waukeen.Rule
-
-		dec := json.NewDecoder(file)
-
-		err = dec.Decode(&rules)
+		rules, err := srv.RuleImporter.Import(file)
 
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)

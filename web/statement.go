@@ -25,7 +25,7 @@ func (srv *Server) createStatement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list, err := srv.Statement.Import(file)
+	list, err := srv.StatementImporter.Import(file)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintln(w, err)

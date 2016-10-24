@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"io/ioutil"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/luizbranco/waukeen"
@@ -42,8 +43,8 @@ func TestCreateStatement(t *testing.T) {
 	db := &mock.Database{}
 
 	srv := &Server{
-		Statement: importer,
-		DB:        db,
+		StatementImporter: importer,
+		DB:                db,
 	}
 
 	t.Run("Invalid Method", func(t *testing.T) {
@@ -73,10 +74,7 @@ func TestCreateStatement(t *testing.T) {
 		importer.ImportMethod = func(io.Reader) ([]waukeen.Statement, error) {
 			return nil, nil
 		}
-		req, err := fileUpload("statement", "/statements", "../mock/cc.ofx")
-		if err != nil {
-			t.Error(err)
-		}
+		req := fileUpload("statement", "/statements")
 		res := ServerTest(srv, req)
 
 		code := 400
@@ -97,10 +95,7 @@ func TestCreateStatement(t *testing.T) {
 			return errors.New("account not found")
 		}
 
-		req, err := fileUpload("statement", "/statements", "../mock/cc.ofx")
-		if err != nil {
-			t.Error(err)
-		}
+		req := fileUpload("statement", "/statements")
 		res := ServerTest(srv, req)
 
 		code := 500
@@ -120,11 +115,7 @@ func TestCreateStatement(t *testing.T) {
 			return nil
 		}
 
-		req, err := fileUpload("statement", "/statements", "../mock/cc.ofx")
-		if err != nil {
-			t.Error(err)
-		}
-
+		req := fileUpload("statement", "/statements")
 		res := ServerTest(srv, req)
 
 		code := 302
@@ -141,30 +132,30 @@ func TestCreateStatement(t *testing.T) {
 	})
 }
 
-func fileUpload(name, uri, path string) (*http.Request, error) {
-	file, err := os.Open(path)
+func fileUpload(name, uri string) *http.Request {
+	tmpfile, err := ioutil.TempFile("", "example")
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
-	defer file.Close()
+	defer os.Remove(tmpfile.Name())
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile(name, filepath.Base(path))
+	part, err := writer.CreateFormFile(name, tmpfile.Name())
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
-	_, err = io.Copy(part, file)
+	_, err = io.Copy(part, tmpfile)
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
 	writer.Close()
 
 	req, err := http.NewRequest("POST", uri, body)
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
-	return req, err
+	return req
 }

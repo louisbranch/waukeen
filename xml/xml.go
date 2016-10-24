@@ -7,9 +7,9 @@ import (
 	"github.com/luizbranco/waukeen"
 )
 
-type XML struct{}
+type Statement struct{}
 
-func (xml *XML) Import(in io.Reader) ([]waukeen.Statement, error) {
+func (*Statement) Import(in io.Reader) ([]waukeen.Statement, error) {
 	result, err := ofx.Parse(in)
 
 	if err != nil {

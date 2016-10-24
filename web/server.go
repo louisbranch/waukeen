@@ -11,10 +11,11 @@ import (
 )
 
 type Server struct {
-	DB          waukeen.Database
-	Template    waukeen.Template
-	Statement   waukeen.StatementImporter
-	Transformer waukeen.TransactionTransformer
+	DB                waukeen.Database
+	Template          waukeen.Template
+	StatementImporter waukeen.StatementImporter
+	RuleImporter      waukeen.RuleImporter
+	Transformer       waukeen.TransactionTransformer
 }
 
 type TagCost struct {
@@ -36,7 +37,7 @@ func (srv *Server) NewServeMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/accounts", srv.accounts)
-	mux.HandleFunc("/rules/batch", srv.importRules)
+	mux.HandleFunc("/rules/import", srv.importRules)
 	mux.HandleFunc("/rules/new", srv.newRule)
 	mux.HandleFunc("/rules", srv.rules)
 	mux.HandleFunc("/statements", srv.createStatement)

@@ -63,6 +63,10 @@ type Rule struct {
 	Result    string
 }
 
+type RuleImporter interface {
+	Import(io.Reader) ([]Rule, error)
+}
+
 type Statement struct {
 	Account      Account
 	Transactions []Transaction

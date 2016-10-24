@@ -14,6 +14,14 @@ func (m *Template) Render(w io.Writer, data interface{}, path ...string) error {
 	return m.RenderMethod(w, data, path...)
 }
 
+type RuleImporter struct {
+	ImportMethod func(io.Reader) ([]waukeen.Rule, error)
+}
+
+func (m *RuleImporter) Import(in io.Reader) ([]waukeen.Rule, error) {
+	return m.ImportMethod(in)
+}
+
 type StatementImporter struct {
 	ImportMethod func(io.Reader) ([]waukeen.Statement, error)
 }

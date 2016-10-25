@@ -258,7 +258,7 @@ func (db *DB) FindRules(acc string) ([]waukeen.Rule, error) {
 	var rules []waukeen.Rule
 
 	stmt := `SELECT id, account_id, type, match, result from rules
-	where account_id = ? OR account_id = ""`
+	where account_id = ? OR account_id = ''`
 
 	rows, err := db.Query(stmt, acc)
 	if err != nil {

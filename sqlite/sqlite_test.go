@@ -10,12 +10,18 @@ import (
 	"github.com/luizbranco/waukeen"
 )
 
-func TestCreateAccount(t *testing.T) {
-	db, err := New("waukeen_test.db")
+func newDB() (*DB, string) {
+	name := "waukeen_test.db"
+	db, err := New(name)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer os.Remove("waukeen_test.db")
+	return db, name
+}
+
+func TestCreateAccount(t *testing.T) {
+	db, path := newDB()
+	defer os.Remove(path)
 
 	acc := &waukeen.Account{
 		Number:   "12345",
@@ -24,7 +30,7 @@ func TestCreateAccount(t *testing.T) {
 		Currency: "CAD",
 		Balance:  1000,
 	}
-	err = db.CreateAccount(acc)
+	err := db.CreateAccount(acc)
 
 	if err != nil {
 		t.Errorf("wants no error, got %s", err)
@@ -43,11 +49,8 @@ func TestCreateAccount(t *testing.T) {
 }
 
 func TestFindAccounts(t *testing.T) {
-	db, err := New("waukeen_test.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove("waukeen_test.db")
+	db, path := newDB()
+	defer os.Remove(path)
 
 	want := []waukeen.Account{
 		{
@@ -69,7 +72,7 @@ func TestFindAccounts(t *testing.T) {
 	}
 
 	for _, a := range want {
-		err = db.CreateAccount(&a)
+		err := db.CreateAccount(&a)
 
 		if err != nil {
 			t.Errorf("wants no error, got %s", err)
@@ -87,11 +90,8 @@ func TestFindAccounts(t *testing.T) {
 }
 
 func TestFindAccount(t *testing.T) {
-	db, err := New("waukeen_test.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove("waukeen_test.db")
+	db, path := newDB()
+	defer os.Remove(path)
 
 	want := &waukeen.Account{
 		ID:       "1",
@@ -102,7 +102,7 @@ func TestFindAccount(t *testing.T) {
 		Balance:  1000,
 	}
 
-	err = db.CreateAccount(want)
+	err := db.CreateAccount(want)
 
 	if err != nil {
 		t.Errorf("wants no error, got %s", err)
@@ -119,11 +119,8 @@ func TestFindAccount(t *testing.T) {
 }
 
 func TestUpdateAccount(t *testing.T) {
-	db, err := New("waukeen_test.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove("waukeen_test.db")
+	db, path := newDB()
+	defer os.Remove(path)
 
 	want := &waukeen.Account{
 		ID:       "1",
@@ -134,7 +131,7 @@ func TestUpdateAccount(t *testing.T) {
 		Balance:  1000,
 	}
 
-	err = db.CreateAccount(want)
+	err := db.CreateAccount(want)
 
 	if err != nil {
 		t.Errorf("wants no error, got %s", err)
@@ -157,11 +154,8 @@ func TestUpdateAccount(t *testing.T) {
 }
 
 func TestCreateTransaction(t *testing.T) {
-	db, err := New("waukeen_test.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove("waukeen_test.db")
+	db, path := newDB()
+	defer os.Remove(path)
 
 	tr := &waukeen.Transaction{
 		AccountID:   "1",
@@ -173,7 +167,7 @@ func TestCreateTransaction(t *testing.T) {
 		Amount:      9999,
 		Date:        time.Now(),
 	}
-	err = db.CreateTransaction(tr)
+	err := db.CreateTransaction(tr)
 
 	if err != nil {
 		t.Errorf("wants no error, got %s", err)
@@ -192,11 +186,8 @@ func TestCreateTransaction(t *testing.T) {
 }
 
 func TestCreateRule(t *testing.T) {
-	db, err := New("waukeen_test.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove("waukeen_test.db")
+	db, path := newDB()
+	defer os.Remove(path)
 
 	r := &waukeen.Rule{
 		AccountID: "1",
@@ -204,7 +195,7 @@ func TestCreateRule(t *testing.T) {
 		Match:     "dominos",
 		Result:    "pizza",
 	}
-	err = db.CreateRule(r)
+	err := db.CreateRule(r)
 
 	if err != nil {
 		t.Errorf("wants no error, got %s", err)
@@ -223,11 +214,8 @@ func TestCreateRule(t *testing.T) {
 }
 
 func TestFindRules(t *testing.T) {
-	db, err := New("waukeen_test.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove("waukeen_test.db")
+	db, path := newDB()
+	defer os.Remove(path)
 
 	want := []waukeen.Rule{
 		{
@@ -240,8 +228,7 @@ func TestFindRules(t *testing.T) {
 	}
 
 	for _, r := range want {
-		err = db.CreateRule(&r)
-
+		err := db.CreateRule(&r)
 		if err != nil {
 			t.Errorf("wants no error, got %s", err)
 		}

@@ -190,3 +190,78 @@ func TestCreateTransaction(t *testing.T) {
 		t.Errorf("wants error, got none")
 	}
 }
+
+func TestCreateRule(t *testing.T) {
+	db, err := New("waukeen_test.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove("waukeen_test.db")
+
+	r := &waukeen.Rule{
+		AccountID: "1",
+		Type:      waukeen.TagRule,
+		Match:     "dominos",
+		Result:    "pizza",
+	}
+	err = db.CreateRule(r)
+
+	if err != nil {
+		t.Errorf("wants no error, got %s", err)
+	}
+
+	if r.ID != "1" {
+		t.Errorf("wants transaction id 1, got %s", r.ID)
+	}
+
+	r = &waukeen.Rule{Match: ""}
+	err = db.CreateRule(r)
+
+	if err == nil {
+		t.Errorf("wants error, got none")
+	}
+}
+
+func TestFindRules(t *testing.T) {
+	db, err := New("waukeen_test.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove("waukeen_test.db")
+
+	want := []waukeen.Rule{
+		{
+			AccountID: "1",
+			ID:        "1",
+			Type:      waukeen.TagRule,
+			Match:     "dominos",
+			Result:    "pizza",
+		},
+	}
+
+	for _, r := range want {
+		err = db.CreateRule(&r)
+
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+	}
+
+	got, err := db.FindRules("1")
+	if err != nil {
+		t.Errorf("wants no error, got %s", err)
+	}
+
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("wants %+v, got %+v", want, got)
+	}
+
+	got, err = db.FindRules("")
+	if err != nil {
+		t.Errorf("wants no error, got %s", err)
+	}
+
+	if len(got) != 0 {
+		t.Errorf("wants empty rules, got %+v", got)
+	}
+}

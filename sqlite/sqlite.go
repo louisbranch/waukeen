@@ -72,7 +72,7 @@ func New(path string) (*DB, error) {
 			id INTEGER PRIMARY KEY,
 			account_id INTEGER,
 			type INTEGER NOT NULL,
-			match TEXT NOT NULL,
+			match TEXT NOT NULL CHECK(match <> ''),
 			result TEXT NOT NULL,
 			FOREIGN KEY(account_id) REFERENCES accounts(id)
 		);

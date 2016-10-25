@@ -69,7 +69,7 @@ func (srv *Server) importRules(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		rules, err := srv.RuleImporter.Import(file)
+		rules, err := srv.RulesImporter.Import(file)
 
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)

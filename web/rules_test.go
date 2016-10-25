@@ -176,7 +176,7 @@ func TestImportRules(t *testing.T) {
 		importer.ImportMethod = func(io.Reader) ([]waukeen.Rule, error) {
 			return nil, errors.New("not implemented")
 		}
-		srv := &Server{RuleImporter: importer}
+		srv := &Server{RulesImporter: importer}
 
 		req := fileUpload("rules", "/rules/import")
 		res := serverTest(srv, req)
@@ -196,7 +196,7 @@ func TestImportRules(t *testing.T) {
 		db.CreateRuleMethod = func(r *waukeen.Rule) error {
 			return errors.New("not implemented")
 		}
-		srv := &Server{RuleImporter: importer, DB: db}
+		srv := &Server{RulesImporter: importer, DB: db}
 
 		req := fileUpload("rules", "/rules/import")
 		res := serverTest(srv, req)
@@ -225,7 +225,7 @@ func TestImportRules(t *testing.T) {
 			}
 			return nil
 		}
-		srv := &Server{RuleImporter: importer, DB: db}
+		srv := &Server{RulesImporter: importer, DB: db}
 
 		req := fileUpload("rules", "/rules/import")
 		res := serverTest(srv, req)

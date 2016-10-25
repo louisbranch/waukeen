@@ -37,8 +37,8 @@ func TestCreateStatement(t *testing.T) {
 	db := &mock.Database{}
 
 	srv := &Server{
-		StatementImporter: importer,
-		DB:                db,
+		StatementsImporter: importer,
+		DB:                 db,
 	}
 
 	t.Run("Invalid Method", func(t *testing.T) {

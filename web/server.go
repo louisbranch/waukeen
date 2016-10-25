@@ -11,11 +11,11 @@ import (
 )
 
 type Server struct {
-	DB                waukeen.Database
-	Template          waukeen.Template
-	StatementImporter waukeen.StatementImporter
-	RuleImporter      waukeen.RuleImporter
-	Transformer       waukeen.TransactionTransformer
+	DB                 waukeen.Database
+	Template           waukeen.Template
+	StatementsImporter waukeen.StatementsImporter
+	RulesImporter      waukeen.RulesImporter
+	Transformer        waukeen.TransactionTransformer
 }
 
 type TagCost struct {

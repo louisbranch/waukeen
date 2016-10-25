@@ -21,11 +21,11 @@ func main() {
 	}
 
 	srv := &web.Server{
-		DB:                db,
-		Template:          html.New("html/templates"),
-		StatementImporter: &xml.Statement{},
-		RuleImporter:      &json.Rules{},
-		Transformer:       transformer.Text{},
+		DB:                 db,
+		Template:           html.New("html/templates"),
+		StatementsImporter: &xml.Statement{},
+		RulesImporter:      &json.Rules{},
+		Transformer:        transformer.Text{},
 	}
 	mux := srv.NewServeMux()
 

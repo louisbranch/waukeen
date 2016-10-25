@@ -63,7 +63,7 @@ type Rule struct {
 	Result    string
 }
 
-type RuleImporter interface {
+type RulesImporter interface {
 	Import(io.Reader) ([]Rule, error)
 }
 
@@ -72,7 +72,7 @@ type Statement struct {
 	Transactions []Transaction
 }
 
-type StatementImporter interface {
+type StatementsImporter interface {
 	Import(io.Reader) ([]Statement, error)
 }
 

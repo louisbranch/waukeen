@@ -34,10 +34,10 @@ func New(path string) (*DB, error) {
 		`
 		CREATE TABLE IF NOT EXISTS transactions(
 			id INTEGER PRIMARY KEY,
-			account_id INTEGER,
-			fitid TEXT NOT NULL,
+			account_id INTEGER NOT NULL,
+			fitid TEXT NOT NULL CHECK(fitid <> ''),
 			type INTEGER NOT NULL,
-			title TEXT NOT NULL,
+			title TEXT NOT NULL CHECK(title <> ''),
 			alias TEXT,
 			description TEXT,
 			amount INTEGER,
@@ -155,7 +155,7 @@ func (db *DB) UpdateAccount(a *waukeen.Account) error {
 }
 
 func (db *DB) CreateTransaction(t *waukeen.Transaction) error {
-	q := `INSERT OR IGNORE into transactions
+	q := `INSERT OR REPLACE into transactions
 	(account_id, fitid, type, title, alias, description, amount, date)
 	values (?, ?, ?, ?, ?, ?, ?, ?);`
 

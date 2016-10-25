@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/luizbranco/waukeen"
 )
@@ -152,5 +153,40 @@ func TestUpdateAccount(t *testing.T) {
 
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("wants %+v, got %+v", want, got)
+	}
+}
+
+func TestCreateTransaction(t *testing.T) {
+	db, err := New("waukeen_test.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove("waukeen_test.db")
+
+	tr := &waukeen.Transaction{
+		AccountID:   "1",
+		FITID:       "12345",
+		Type:        waukeen.Debit,
+		Title:       "First Transaction",
+		Alias:       "Renamed Transaction",
+		Description: "Surcharge",
+		Amount:      9999,
+		Date:        time.Now(),
+	}
+	err = db.CreateTransaction(tr)
+
+	if err != nil {
+		t.Errorf("wants no error, got %s", err)
+	}
+
+	if tr.ID != "1" {
+		t.Errorf("wants transaction id 1, got %s", tr.ID)
+	}
+
+	tr = &waukeen.Transaction{FITID: ""}
+	err = db.CreateTransaction(tr)
+
+	if err == nil {
+		t.Errorf("wants error, got none")
 	}
 }

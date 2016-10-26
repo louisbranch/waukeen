@@ -50,6 +50,10 @@ type Database struct {
 	CreateRuleMethod func(*waukeen.Rule) error
 	FindRulesMethod  func(acc string) ([]waukeen.Rule, error)
 
+	CreateTagMethod func(*waukeen.Tag) error
+	FindTagMethod   func(name string) (*waukeen.Tag, error)
+	FindTagsMethod  func(starts string) ([]waukeen.Tag, error)
+
 	CreateStatementMethod func(waukeen.Statement, waukeen.TransactionTransformer) error
 }
 
@@ -87,4 +91,14 @@ func (m *Database) FindRules(acc string) ([]waukeen.Rule, error) {
 
 func (m *Database) CreateStatement(s waukeen.Statement, t waukeen.TransactionTransformer) error {
 	return m.CreateStatementMethod(s, t)
+}
+
+func (m *Database) CreateTag(t *waukeen.Tag) error {
+	return m.CreateTagMethod(t)
+}
+func (m *Database) FindTag(name string) (*waukeen.Tag, error) {
+	return m.FindTagMethod(name)
+}
+func (m *Database) FindTags(starts string) ([]waukeen.Tag, error) {
+	return m.FindTagsMethod(starts)
 }

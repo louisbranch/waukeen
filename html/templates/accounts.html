@@ -46,7 +46,7 @@
       <strong>Summary:</strong>
       <ul>
         {{ range .TagCosts }}
-          <li><strong>{{ .Name }}</strong>({{ .Count }}) {{ currency .Total }}</li>
+          <li><strong>{{ .Name }}</strong>({{ .Count }}) {{ .Total }}</li>
         {{ end }}
       </ul>
     </div>
@@ -64,7 +64,7 @@
           <th>Tags</th>
         </tr>
         <tr>
-          <th colspan="5">{{ currency .Total }}</th>
+          <th colspan="5">{{ .Total }}</th>
         </tr>
       </thead>
       <tbody>
@@ -84,7 +84,7 @@
             {{ .Type }}
           </td>
           <td>
-            {{ currency .Amount }}
+            {{ .Amount }}
           </td>
           <td>
             {{- range $index, $element := .Tags -}}

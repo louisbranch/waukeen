@@ -3,6 +3,7 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -53,7 +54,7 @@ func New(path string) (*DB, error) {
 		`
 		CREATE TABLE IF NOT EXISTS tags(
 			id INTEGER PRIMARY KEY,
-			name TEXT NOT NULL UNIQUE
+			name TEXT NOT NULL UNIQUE CHECK(name <> '')
 		);
 		`,
 		`
@@ -156,7 +157,7 @@ func (db *DB) UpdateAccount(a *waukeen.Account) error {
 }
 
 func (db *DB) CreateTransaction(t *waukeen.Transaction) error {
-	q := `INSERT OR REPLACE into transactions
+	q := `INSERT into transactions
 	(account_id, fitid, type, title, alias, description, amount, date)
 	values (?, ?, ?, ?, ?, ?, ?, ?);`
 
@@ -174,6 +175,22 @@ func (db *DB) CreateTransaction(t *waukeen.Transaction) error {
 	}
 
 	t.ID = strconv.FormatInt(id, 10)
+
+	for _, name := range t.Tags {
+		tag, err := db.FindTag(name)
+		if err != nil {
+			tag = &waukeen.Tag{Name: name}
+			err = db.CreateTag(tag)
+		}
+		if err != nil {
+			return fmt.Errorf("error creating transaction tag %s:", name, err)
+		}
+		q := `INSERT into transaction_tags (transaction_id, tag_id) values (?, ?)`
+		_, err = db.Exec(q, t.ID, tag.ID)
+		if err != nil {
+			return fmt.Errorf("error creating transaction tag relation %s:", name, err)
+		}
+	}
 
 	return nil
 }
@@ -199,6 +216,7 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 	}
 
 	if len(opts.Tags) > 0 {
+		// select transactions.title from transactions JOIN transaction_tags ON transactions.id = transaction_tags.transaction_id JOIN tags on tags.id = transaction_tags.tag_id where tags.name IN ('pizza', 'groceries') group by transactions.id;
 		//FIXME
 	}
 
@@ -230,10 +248,43 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 		if err != nil {
 			return nil, err
 		}
+
+		tags, err := db.findTags(t.ID)
+		if err != nil {
+			return nil, err
+		}
+		t.Tags = tags
+
 		transactions = append(transactions, t)
 	}
 	err = rows.Err()
 	return transactions, err
+}
+
+func (db *DB) findTags(transaction string) ([]string, error) {
+	q := `SELECT DISTINCT tags.name FROM transaction_tags JOIN tags on
+	transaction_tags.tag_id = tags.id WHERE transaction_tags.transaction_id = ?`
+
+	var tags []string
+
+	rows, err := db.Query(q, transaction)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var name string
+		err = rows.Scan(&name)
+		if err != nil {
+			return nil, err
+		}
+		tags = append(tags, name)
+	}
+	err = rows.Err()
+	sort.Strings(tags)
+
+	return tags, err
 }
 
 func (db *DB) CreateRule(r *waukeen.Rule) error {
@@ -318,4 +369,60 @@ func (db *DB) CreateStatement(stmt waukeen.Statement,
 	}
 
 	return nil
+}
+
+func (db *DB) CreateTag(t *waukeen.Tag) error {
+	q := `INSERT into tags (name) values (?)`
+
+	res, err := db.Exec(q, t.Name, t.Name)
+
+	if err != nil {
+		return fmt.Errorf("error creating tag: %s", err)
+	}
+
+	id, err := res.LastInsertId()
+
+	if err != nil {
+		return fmt.Errorf("error retrieving last tag id: %s", err)
+	}
+
+	t.ID = strconv.FormatInt(id, 10)
+
+	return nil
+}
+
+func (db *DB) FindTag(name string) (*waukeen.Tag, error) {
+	q := "SELECT id, name FROM tags where name = ?"
+
+	t := &waukeen.Tag{}
+
+	err := db.QueryRow(q, name).Scan(&t.ID, &t.Name)
+
+	if err != nil {
+		return nil, fmt.Errorf("error finding tag: %s", err)
+	}
+
+	return t, nil
+}
+
+func (db *DB) FindTags(starts string) ([]waukeen.Tag, error) {
+	var tags []waukeen.Tag
+
+	starts += "%"
+	rows, err := db.Query("SELECT id, name FROM tags where name LIKE ?", starts)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		t := waukeen.Tag{}
+		err = rows.Scan(&t.ID, &t.Name)
+		if err != nil {
+			return nil, err
+		}
+		tags = append(tags, t)
+	}
+	err = rows.Err()
+	return tags, err
 }

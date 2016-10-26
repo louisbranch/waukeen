@@ -229,6 +229,7 @@ func TestFindTransactions(t *testing.T) {
 		Type:      waukeen.Debit,
 		Title:     "1st",
 		Date:      time.Date(2016, 10, 1, 0, 0, 0, 0, time.UTC),
+		Tags:      []string{"groceries", "restaurants"},
 	}
 	tr2 := waukeen.Transaction{
 		ID:        "2",
@@ -253,6 +254,7 @@ func TestFindTransactions(t *testing.T) {
 		Type:      waukeen.Credit,
 		Title:     "4th",
 		Date:      time.Date(2016, 10, 15, 0, 0, 0, 0, time.UTC),
+		Tags:      []string{"groceries"},
 	}
 
 	for _, tr := range []waukeen.Transaction{tr1, tr2, tr3, tr4} {
@@ -454,6 +456,75 @@ func TestCreateStatement(t *testing.T) {
 
 		if got != want {
 			t.Errorf("wants transaction alias to be %s, got %s", want, got)
+		}
+	})
+}
+
+func TestCreateTag(t *testing.T) {
+	db, path := testDB()
+	defer os.Remove(path)
+
+	t.Run("Invalid Tag", func(t *testing.T) {
+		tag := &waukeen.Tag{}
+		err := db.CreateTag(tag)
+		if err == nil {
+			t.Errorf("wants error, got none")
+		}
+	})
+
+	t.Run("Valid Tag", func(t *testing.T) {
+		tag := &waukeen.Tag{Name: "Test"}
+		err := db.CreateTag(tag)
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+		if tag.ID != "1" {
+			t.Errorf("wants tag id %s, got %s", "1", tag.ID)
+		}
+	})
+
+	t.Run("Duplicated Tag", func(t *testing.T) {
+		tag := &waukeen.Tag{Name: "Test"}
+		err := db.CreateTag(tag)
+		if err == nil {
+			t.Errorf("wants error, got none")
+		}
+	})
+}
+
+func TestFindTags(t *testing.T) {
+	db, path := testDB()
+	defer os.Remove(path)
+
+	t1 := waukeen.Tag{ID: "1", Name: "foo"}
+	t2 := waukeen.Tag{ID: "2", Name: "bar"}
+	t3 := waukeen.Tag{ID: "3", Name: "baz"}
+
+	for _, tag := range []waukeen.Tag{t1, t2, t3} {
+		err := db.CreateTag(&tag)
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+	}
+
+	t.Run("No Match", func(t *testing.T) {
+		tags, err := db.FindTags("xa")
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+		if len(tags) != 0 {
+			t.Errorf("wants no tags, got %+v", tags)
+		}
+	})
+
+	t.Run("Multiple Matches", func(t *testing.T) {
+		want := []waukeen.Tag{t2, t3}
+		got, err := db.FindTags("ba")
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+		if !reflect.DeepEqual(want, got) {
+			t.Errorf("wants %+v, got %+v", want, got)
 		}
 	})
 }

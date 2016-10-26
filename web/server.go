@@ -2,9 +2,7 @@ package web
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
-	"path"
 	"strings"
 
 	"github.com/luizbranco/waukeen"
@@ -60,14 +58,7 @@ func (srv *Server) index(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	p := path.Join("web", "templates", "index.html")
-	t, err := template.ParseFiles(p)
-	if err == nil {
-		err = t.Execute(w, nil)
-	}
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
+	srv.render(w, nil, "index")
 }
 
 func (t TagCosts) Len() int {

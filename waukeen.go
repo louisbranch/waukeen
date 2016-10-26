@@ -88,6 +88,10 @@ type Database interface {
 	CreateRule(*Rule) error
 	FindRules(acc string) ([]Rule, error)
 
+	CreateTag(*Tag) error
+	FindTag(name string) (*Tag, error)
+	FindTags(starts string) ([]Tag, error)
+
 	CreateStatement(Statement, TransactionTransformer) error
 }
 

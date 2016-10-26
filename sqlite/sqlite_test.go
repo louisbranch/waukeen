@@ -217,23 +217,30 @@ func TestFindRules(t *testing.T) {
 	db, path := newDB()
 	defer os.Remove(path)
 
-	want := []waukeen.Rule{
-		{
-			AccountID: "1",
-			ID:        "1",
-			Type:      waukeen.TagRule,
-			Match:     "dominos",
-			Result:    "pizza",
-		},
+	r1 := waukeen.Rule{
+		AccountID: "1",
+		ID:        "1",
+		Type:      waukeen.TagRule,
+		Match:     "dominos",
+		Result:    "pizza",
 	}
 
-	for _, r := range want {
+	r2 := waukeen.Rule{
+		AccountID: "",
+		ID:        "2",
+		Type:      waukeen.TagRule,
+		Match:     "dominos",
+		Result:    "pizza",
+	}
+
+	for _, r := range []waukeen.Rule{r1, r2} {
 		err := db.CreateRule(&r)
 		if err != nil {
 			t.Errorf("wants no error, got %s", err)
 		}
 	}
 
+	want := []waukeen.Rule{r1, r2}
 	got, err := db.FindRules("1")
 	if err != nil {
 		t.Errorf("wants no error, got %s", err)
@@ -243,12 +250,13 @@ func TestFindRules(t *testing.T) {
 		t.Errorf("wants %+v, got %+v", want, got)
 	}
 
-	got, err = db.FindRules("")
+	want = []waukeen.Rule{r2}
+	got, err = db.FindRules("2")
 	if err != nil {
 		t.Errorf("wants no error, got %s", err)
 	}
 
-	if len(got) != 0 {
-		t.Errorf("wants empty rules, got %+v", got)
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("wants %+v, got %+v", want, got)
 	}
 }

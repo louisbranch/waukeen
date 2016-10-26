@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"io/ioutil"
 	"log"
 	"os"
 	"reflect"
@@ -8,10 +9,15 @@ import (
 	"time"
 
 	"github.com/luizbranco/waukeen"
+	"github.com/luizbranco/waukeen/mock"
 )
 
-func newDB() (*DB, string) {
-	name := "waukeen_test.db"
+func testDB() (*DB, string) {
+	tmpfile, err := ioutil.TempFile("", "waukeen_db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	name := tmpfile.Name()
 	db, err := New(name)
 	if err != nil {
 		log.Fatal(err)
@@ -20,7 +26,7 @@ func newDB() (*DB, string) {
 }
 
 func TestCreateAccount(t *testing.T) {
-	db, path := newDB()
+	db, path := testDB()
 	defer os.Remove(path)
 
 	acc := &waukeen.Account{
@@ -42,14 +48,13 @@ func TestCreateAccount(t *testing.T) {
 
 	acc = &waukeen.Account{Number: ""}
 	err = db.CreateAccount(acc)
-
 	if err == nil {
 		t.Errorf("wants error, got none")
 	}
 }
 
 func TestFindAccounts(t *testing.T) {
-	db, path := newDB()
+	db, path := testDB()
 	defer os.Remove(path)
 
 	want := []waukeen.Account{
@@ -90,7 +95,7 @@ func TestFindAccounts(t *testing.T) {
 }
 
 func TestFindAccount(t *testing.T) {
-	db, path := newDB()
+	db, path := testDB()
 	defer os.Remove(path)
 
 	want := &waukeen.Account{
@@ -119,7 +124,7 @@ func TestFindAccount(t *testing.T) {
 }
 
 func TestUpdateAccount(t *testing.T) {
-	db, path := newDB()
+	db, path := testDB()
 	defer os.Remove(path)
 
 	want := &waukeen.Account{
@@ -154,7 +159,7 @@ func TestUpdateAccount(t *testing.T) {
 }
 
 func TestCreateTransaction(t *testing.T) {
-	db, path := newDB()
+	db, path := testDB()
 	defer os.Remove(path)
 
 	tr := &waukeen.Transaction{
@@ -186,7 +191,7 @@ func TestCreateTransaction(t *testing.T) {
 }
 
 func TestCreateRule(t *testing.T) {
-	db, path := newDB()
+	db, path := testDB()
 	defer os.Remove(path)
 
 	r := &waukeen.Rule{
@@ -213,8 +218,122 @@ func TestCreateRule(t *testing.T) {
 	}
 }
 
+func TestFindTransactions(t *testing.T) {
+	db, path := testDB()
+	defer os.Remove(path)
+
+	tr1 := waukeen.Transaction{
+		ID:        "1",
+		AccountID: "1",
+		FITID:     "01",
+		Type:      waukeen.Debit,
+		Title:     "1st",
+		Date:      time.Date(2016, 10, 1, 0, 0, 0, 0, time.UTC),
+	}
+	tr2 := waukeen.Transaction{
+		ID:        "2",
+		AccountID: "1",
+		FITID:     "02",
+		Type:      waukeen.Credit,
+		Title:     "2nd",
+		Date:      time.Date(2016, 10, 5, 0, 0, 0, 0, time.UTC),
+	}
+	tr3 := waukeen.Transaction{
+		ID:        "3",
+		AccountID: "2",
+		FITID:     "03",
+		Type:      waukeen.Debit,
+		Title:     "3rd",
+		Date:      time.Date(2016, 10, 10, 0, 0, 0, 0, time.UTC),
+	}
+	tr4 := waukeen.Transaction{
+		ID:        "4",
+		AccountID: "2",
+		FITID:     "04",
+		Type:      waukeen.Credit,
+		Title:     "4th",
+		Date:      time.Date(2016, 10, 15, 0, 0, 0, 0, time.UTC),
+	}
+
+	for _, tr := range []waukeen.Transaction{tr1, tr2, tr3, tr4} {
+		err := db.CreateTransaction(&tr)
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+	}
+
+	cases := []struct {
+		opts waukeen.TransactionsDBOptions
+		want []waukeen.Transaction
+	}{
+		{
+			waukeen.TransactionsDBOptions{Accounts: []string{"1"}},
+			[]waukeen.Transaction{tr1, tr2},
+		},
+		{
+			waukeen.TransactionsDBOptions{
+				Accounts: []string{"1"},
+				Start:    time.Date(2016, 10, 15, 0, 0, 0, 0, time.UTC),
+			},
+			nil,
+		},
+		{
+			waukeen.TransactionsDBOptions{
+				Accounts: []string{"1"},
+				Start:    time.Date(2016, 10, 5, 0, 0, 0, 0, time.UTC),
+			},
+			[]waukeen.Transaction{tr2},
+		},
+		{
+			waukeen.TransactionsDBOptions{
+				Accounts: []string{"1"},
+				End:      time.Date(2016, 10, 1, 0, 0, 0, 0, time.UTC),
+			},
+			[]waukeen.Transaction{tr1},
+		},
+		{
+			waukeen.TransactionsDBOptions{
+				Start: time.Date(2016, 10, 1, 0, 0, 0, 0, time.UTC),
+				End:   time.Date(2016, 10, 10, 0, 0, 0, 0, time.UTC),
+			},
+			[]waukeen.Transaction{tr1, tr2, tr3},
+		},
+		{
+			waukeen.TransactionsDBOptions{
+				Types: []waukeen.TransactionType{waukeen.Debit, waukeen.Credit},
+			},
+			[]waukeen.Transaction{tr1, tr2, tr3, tr4},
+		},
+		{
+			waukeen.TransactionsDBOptions{
+				Types: []waukeen.TransactionType{waukeen.Debit},
+			},
+			[]waukeen.Transaction{tr1, tr3},
+		},
+		{
+			waukeen.TransactionsDBOptions{
+				Accounts: []string{"2"},
+				Types:    []waukeen.TransactionType{waukeen.Debit},
+				Start:    time.Date(2016, 10, 1, 0, 0, 0, 0, time.UTC),
+				End:      time.Date(2016, 10, 10, 0, 0, 0, 0, time.UTC),
+			},
+			[]waukeen.Transaction{tr3},
+		},
+	}
+
+	for _, c := range cases {
+		got, err := db.FindTransactions(c.opts)
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+		if !reflect.DeepEqual(c.want, got) {
+			t.Errorf("wants\n%+v\ngot\n%+v", c.want, got)
+		}
+	}
+}
+
 func TestFindRules(t *testing.T) {
-	db, path := newDB()
+	db, path := testDB()
 	defer os.Remove(path)
 
 	r1 := waukeen.Rule{
@@ -259,4 +378,82 @@ func TestFindRules(t *testing.T) {
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("wants %+v, got %+v", want, got)
 	}
+}
+
+func TestCreateStatement(t *testing.T) {
+	db, path := testDB()
+	defer os.Remove(path)
+
+	transformer := &mock.TransactionTransformer{}
+	transformer.TransformMethod = func(t *waukeen.Transaction, r waukeen.Rule) {
+		t.Alias = r.Result
+	}
+
+	r := &waukeen.Rule{
+		Type:   waukeen.ReplaceRule,
+		Match:  "something",
+		Result: "New Alias",
+	}
+
+	err := db.CreateRule(r)
+	if err != nil {
+		t.Errorf("wants no error, got %s", err)
+	}
+
+	t.Run("Invalid Account", func(t *testing.T) {
+		stmt := waukeen.Statement{
+			Account: waukeen.Account{},
+		}
+		err := db.CreateStatement(stmt, transformer)
+		if err == nil {
+			t.Errorf("wants error, got none")
+		}
+	})
+
+	t.Run("Invalid Transaction", func(t *testing.T) {
+		stmt := waukeen.Statement{
+			Account: waukeen.Account{Number: "12345"},
+			Transactions: []waukeen.Transaction{
+				{},
+			},
+		}
+		err := db.CreateStatement(stmt, transformer)
+		if err == nil {
+			t.Errorf("wants error, got none")
+		}
+	})
+
+	t.Run("Valid Statement", func(t *testing.T) {
+		stmt := waukeen.Statement{
+			Account: waukeen.Account{Number: "12345"},
+			Transactions: []waukeen.Transaction{
+				{FITID: "67890", Title: "First"},
+			},
+		}
+		err := db.CreateStatement(stmt, transformer)
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+
+		acc, err := db.FindAccount("12345")
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+
+		trs, err := db.FindTransactions(waukeen.TransactionsDBOptions{Accounts: []string{acc.ID}})
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+
+		if len(trs) != 1 {
+			t.Errorf("wants 1 transacton, got %+v", trs)
+		}
+
+		want := "New Alias"
+		got := trs[0].Alias
+
+		if got != want {
+			t.Errorf("wants transaction alias to be %s, got %s", want, got)
+		}
+	})
 }

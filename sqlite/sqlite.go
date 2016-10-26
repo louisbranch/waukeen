@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/luizbranco/waukeen"
 	_ "github.com/mattn/go-sqlite3"
@@ -206,10 +207,12 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 	}
 
 	if !opts.End.IsZero() {
-		clauses = append(clauses, "date <= "+opts.End.Format("'2006-01-02'"))
+		end := opts.End
+		end = end.Add(time.Hour * 24)
+		clauses = append(clauses, "date < "+end.Format("'2006-01-02'"))
 	}
 
-	q := `SELECT id, account_id, type, title, alias, description, amount, date
+	q := `SELECT id, account_id, fitid, type, title, alias, description, amount, date
 	FROM transactions WHERE `
 
 	q += strings.Join(clauses, " AND ")
@@ -222,7 +225,7 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 
 	for rows.Next() {
 		t := waukeen.Transaction{}
-		err = rows.Scan(&t.ID, &t.AccountID, &t.Type, &t.Title, &t.Alias,
+		err = rows.Scan(&t.ID, &t.AccountID, &t.FITID, &t.Type, &t.Title, &t.Alias,
 			&t.Description, &t.Amount, &t.Date)
 		if err != nil {
 			return nil, err

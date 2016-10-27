@@ -197,10 +197,32 @@ func (db *DB) CreateTransaction(t *waukeen.Transaction) error {
 
 func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
 	var transactions []waukeen.Transaction
+	var query string
 	var clauses []string
 
+	if len(opts.Tags) > 0 {
+		tags := ""
+		for i, t := range opts.Tags {
+			if i > 0 {
+				tags += ", "
+			}
+			tags += "'" + t + "'"
+		}
+		query = `SELECT transactions.id, transactions.account_id,
+		transactions.fitid, transactions.type, transactions.title,
+		transactions.alias, transactions.description, transactions.amount,
+		transactions.date FROM transactions JOIN transaction_tags ON
+		transactions.id = transaction_tags.transaction_id JOIN tags ON tags.id
+		= transaction_tags.tag_id where `
+
+		clauses = append(clauses, fmt.Sprintf("tags.name IN (%s)", tags))
+	} else {
+		query = `SELECT id, account_id, fitid, type, title, alias, description, amount, date
+	FROM transactions WHERE `
+	}
+
 	if len(opts.Accounts) > 0 {
-		clause := "account_id IN (" + strings.Join(opts.Accounts, " ,") + ")"
+		clause := "transactions.account_id IN (" + strings.Join(opts.Accounts, " ,") + ")"
 		clauses = append(clauses, clause)
 	}
 
@@ -211,31 +233,27 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 			types = append(types, strconv.Itoa(int(t)))
 		}
 
-		clause := "type IN (" + strings.Join(types, " ,") + ")"
+		clause := "transactions.type IN (" + strings.Join(types, " ,") + ")"
 		clauses = append(clauses, clause)
 	}
 
-	if len(opts.Tags) > 0 {
-		// select transactions.title from transactions JOIN transaction_tags ON transactions.id = transaction_tags.transaction_id JOIN tags on tags.id = transaction_tags.tag_id where tags.name IN ('pizza', 'groceries') group by transactions.id;
-		//FIXME
-	}
-
 	if !opts.Start.IsZero() {
-		clauses = append(clauses, "date >= "+opts.Start.Format("'2006-01-02'"))
+		clauses = append(clauses, "transactions.date >= "+opts.Start.Format("'2006-01-02'"))
 	}
 
 	if !opts.End.IsZero() {
 		end := opts.End
 		end = end.Add(time.Hour * 24)
-		clauses = append(clauses, "date < "+end.Format("'2006-01-02'"))
+		clauses = append(clauses, "transactions.date < "+end.Format("'2006-01-02'"))
 	}
 
-	q := `SELECT id, account_id, fitid, type, title, alias, description, amount, date
-	FROM transactions WHERE `
+	query += strings.Join(clauses, " AND ")
 
-	q += strings.Join(clauses, " AND ")
+	if len(opts.Tags) > 0 {
+		query += "GROUP BY transactions.id"
+	}
 
-	rows, err := db.Query(q)
+	rows, err := db.Query(query)
 	if err != nil {
 		return nil, err
 	}

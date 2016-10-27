@@ -245,6 +245,7 @@ func TestFindTransactions(t *testing.T) {
 		FITID:     "03",
 		Type:      waukeen.Debit,
 		Title:     "3rd",
+		Tags:      []string{"transportation"},
 		Date:      time.Date(2016, 10, 10, 0, 0, 0, 0, time.UTC),
 	}
 	tr4 := waukeen.Transaction{
@@ -314,12 +315,34 @@ func TestFindTransactions(t *testing.T) {
 		},
 		{
 			waukeen.TransactionsDBOptions{
+				Tags: []string{"groceries"},
+			},
+			[]waukeen.Transaction{tr1, tr4},
+		},
+		{
+			waukeen.TransactionsDBOptions{
+				Tags: []string{"groceries", "transportation"},
+			},
+			[]waukeen.Transaction{tr1, tr3, tr4},
+		},
+		{
+			waukeen.TransactionsDBOptions{
 				Accounts: []string{"2"},
 				Types:    []waukeen.TransactionType{waukeen.Debit},
 				Start:    time.Date(2016, 10, 1, 0, 0, 0, 0, time.UTC),
 				End:      time.Date(2016, 10, 10, 0, 0, 0, 0, time.UTC),
 			},
 			[]waukeen.Transaction{tr3},
+		},
+		{
+			waukeen.TransactionsDBOptions{
+				Accounts: []string{"1", "2"},
+				Types:    []waukeen.TransactionType{waukeen.Credit, waukeen.Debit},
+				Start:    time.Date(2016, 10, 1, 0, 0, 0, 0, time.UTC),
+				End:      time.Date(2016, 10, 10, 0, 0, 0, 0, time.UTC),
+				Tags:     []string{"restaurants", "transportation"},
+			},
+			[]waukeen.Transaction{tr1, tr3},
 		},
 	}
 

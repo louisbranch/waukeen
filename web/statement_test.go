@@ -33,7 +33,7 @@ func TestNewStatement(t *testing.T) {
 }
 
 func TestCreateStatement(t *testing.T) {
-	importer := &mock.StatementImporter{}
+	importer := &mock.StatementsImporter{}
 	db := &mock.Database{}
 
 	srv := &Server{

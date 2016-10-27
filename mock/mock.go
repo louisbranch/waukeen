@@ -14,19 +14,19 @@ func (m *Template) Render(w io.Writer, data interface{}, path ...string) error {
 	return m.RenderMethod(w, data, path...)
 }
 
-type RuleImporter struct {
+type RulesImporter struct {
 	ImportMethod func(io.Reader) ([]waukeen.Rule, error)
 }
 
-func (m *RuleImporter) Import(in io.Reader) ([]waukeen.Rule, error) {
+func (m *RulesImporter) Import(in io.Reader) ([]waukeen.Rule, error) {
 	return m.ImportMethod(in)
 }
 
-type StatementImporter struct {
+type StatementsImporter struct {
 	ImportMethod func(io.Reader) ([]waukeen.Statement, error)
 }
 
-func (m *StatementImporter) Import(in io.Reader) ([]waukeen.Statement, error) {
+func (m *StatementsImporter) Import(in io.Reader) ([]waukeen.Statement, error) {
 	return m.ImportMethod(in)
 }
 

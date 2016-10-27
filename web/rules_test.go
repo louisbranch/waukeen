@@ -172,7 +172,7 @@ func TestImportRules(t *testing.T) {
 	})
 
 	t.Run("Post rule file error", func(t *testing.T) {
-		importer := &mock.RuleImporter{}
+		importer := &mock.RulesImporter{}
 		importer.ImportMethod = func(io.Reader) ([]waukeen.Rule, error) {
 			return nil, errors.New("not implemented")
 		}
@@ -188,7 +188,7 @@ func TestImportRules(t *testing.T) {
 	})
 
 	t.Run("Post rule file db error", func(t *testing.T) {
-		importer := &mock.RuleImporter{}
+		importer := &mock.RulesImporter{}
 		importer.ImportMethod = func(io.Reader) ([]waukeen.Rule, error) {
 			return []waukeen.Rule{waukeen.Rule{}}, nil
 		}
@@ -214,7 +214,7 @@ func TestImportRules(t *testing.T) {
 			Match:     "dominos",
 			Result:    "pizza",
 		}
-		importer := &mock.RuleImporter{}
+		importer := &mock.RulesImporter{}
 		importer.ImportMethod = func(io.Reader) ([]waukeen.Rule, error) {
 			return []waukeen.Rule{*rule}, nil
 		}

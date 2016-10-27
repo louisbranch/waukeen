@@ -251,7 +251,40 @@ func TestUpdateTransaction(t *testing.T) {
 		}
 	})
 }
+
 func TestCreateRule(t *testing.T) {
+	db, path := testDB()
+	defer os.Remove(path)
+
+	t.Run("Valid Rule", func(t *testing.T) {
+		r := &waukeen.Rule{
+			AccountID: "1",
+			Type:      waukeen.TagRule,
+			Match:     "dominos",
+			Result:    "pizza",
+		}
+		err := db.CreateRule(r)
+
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+
+		if r.ID != "1" {
+			t.Errorf("wants transaction id 1, got %s", r.ID)
+		}
+	})
+
+	t.Run("Valid Rule", func(t *testing.T) {
+		r := &waukeen.Rule{Match: ""}
+		err := db.CreateRule(r)
+
+		if err == nil {
+			t.Errorf("wants error, got none")
+		}
+	})
+}
+
+func TestDeleteRule(t *testing.T) {
 	db, path := testDB()
 	defer os.Remove(path)
 
@@ -267,18 +300,20 @@ func TestCreateRule(t *testing.T) {
 		t.Errorf("wants no error, got %s", err)
 	}
 
-	if r.ID != "1" {
-		t.Errorf("wants transaction id 1, got %s", r.ID)
-	}
+	t.Run("Valid Rule", func(t *testing.T) {
+		err := db.DeleteRule(r.ID)
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+	})
 
-	r = &waukeen.Rule{Match: ""}
-	err = db.CreateRule(r)
-
-	if err == nil {
-		t.Errorf("wants error, got none")
-	}
+	t.Run("Valid Rule", func(t *testing.T) {
+		err := db.DeleteRule("99")
+		if err == nil {
+			t.Errorf("wants error, got none")
+		}
+	})
 }
-
 func TestFindTransactions(t *testing.T) {
 	db, path := testDB()
 	defer os.Remove(path)

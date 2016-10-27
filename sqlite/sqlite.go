@@ -202,9 +202,9 @@ func (db *DB) CreateTransaction(t *waukeen.Transaction) error {
 }
 
 func (db *DB) UpdateTransaction(t *waukeen.Transaction) error {
-	q := fmt.Sprintf(`delete from transaction_tags where id in (select
-		transaction_tags.id from transaction_tags INNER JOIN tags on tags.id =
-		transaction_tags.tag_id where transaction_tags.transaction_id = ? AND
+	q := fmt.Sprintf(`DELETE FROM transaction_tags WHERE id IN  (SELECT
+		transaction_tags.id FROM transaction_tags INNER JOIN tags ON tags.id =
+		transaction_tags.tag_id WHERE transaction_tags.transaction_id = ? AND
 		tags.name NOT IN (%s))`, toInCodition(t.Tags))
 
 	_, err := db.Exec(q, t.ID)
@@ -229,8 +229,8 @@ func (db *DB) UpdateTransaction(t *waukeen.Transaction) error {
 		}
 	}
 
-	q = `UPDATE transactions SET account_id = ?, fitid = ?, type = ?, title = ?,
-	alias = ?, description = ?, amount = ?, date = ? WHERE id = ?`
+	q = `UPDATE transactions SET account_id=?, fitid=?, type=?, title=?, alias=?,
+	description=?, amount=?, date=? WHERE id=?`
 
 	_, err = db.Exec(q, t.AccountID, t.FITID, t.Type, t.Title, t.Alias,
 		t.Description, t.Amount, t.Date, t.ID)
@@ -243,10 +243,6 @@ func (db *DB) UpdateTransaction(t *waukeen.Transaction) error {
 }
 
 func (db *DB) DeleteTransaction(id string) error {
-	return errors.New("not implemented")
-}
-
-func (db *DB) DeleteRule(id string) error {
 	return errors.New("not implemented")
 }
 
@@ -400,6 +396,18 @@ func (db *DB) FindRules(acc string) ([]waukeen.Rule, error) {
 	}
 	err = rows.Err()
 	return rules, err
+}
+
+func (db *DB) DeleteRule(id string) error {
+	res, err := db.Exec("DELETE FROM rules where id = ?", id)
+	if err != nil {
+		return err
+	}
+	qt, err := res.RowsAffected()
+	if qt == 0 {
+		return fmt.Errorf("invalid rule id %s", id)
+	}
+	return err
 }
 
 func (db *DB) CreateStatement(stmt waukeen.Statement,

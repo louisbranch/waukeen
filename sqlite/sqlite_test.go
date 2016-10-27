@@ -162,7 +162,50 @@ func TestCreateTransaction(t *testing.T) {
 	db, path := testDB()
 	defer os.Remove(path)
 
+	t.Run("Valid Transaction", func(t *testing.T) {
+		tr := &waukeen.Transaction{
+			ID:          "1",
+			AccountID:   "1",
+			FITID:       "12345",
+			Type:        waukeen.Debit,
+			Title:       "First Transaction",
+			Alias:       "Renamed Transaction",
+			Description: "Surcharge",
+			Amount:      9999,
+			Date:        time.Date(2016, 10, 1, 0, 0, 0, 0, time.UTC),
+			Tags:        []string{"groceries", "restaurants"},
+		}
+		err := db.CreateTransaction(tr)
+
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+
+		want := []waukeen.Transaction{*tr}
+		got, err := db.FindTransactions(waukeen.TransactionsDBOptions{Accounts: []string{"1"}})
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+		if !reflect.DeepEqual(want, got) {
+			t.Errorf("wants\n%+v\ngot\n%+v", want, got)
+		}
+	})
+
+	t.Run("Invalid Transaction", func(t *testing.T) {
+		tr := &waukeen.Transaction{}
+		err := db.CreateTransaction(tr)
+		if err == nil {
+			t.Errorf("wants error, got none")
+		}
+	})
+}
+
+func TestUpdateTransaction(t *testing.T) {
+	db, path := testDB()
+	defer os.Remove(path)
+
 	tr := &waukeen.Transaction{
+		ID:          "1",
 		AccountID:   "1",
 		FITID:       "12345",
 		Type:        waukeen.Debit,
@@ -170,7 +213,8 @@ func TestCreateTransaction(t *testing.T) {
 		Alias:       "Renamed Transaction",
 		Description: "Surcharge",
 		Amount:      9999,
-		Date:        time.Now(),
+		Date:        time.Date(2016, 10, 1, 0, 0, 0, 0, time.UTC),
+		Tags:        []string{"groceries", "restaurants"},
 	}
 	err := db.CreateTransaction(tr)
 
@@ -178,18 +222,35 @@ func TestCreateTransaction(t *testing.T) {
 		t.Errorf("wants no error, got %s", err)
 	}
 
-	if tr.ID != "1" {
-		t.Errorf("wants transaction id 1, got %s", tr.ID)
-	}
+	t.Run("Valid Transaction", func(t *testing.T) {
+		tr.FITID = "23456"
+		tr.Tags = []string{"food"}
 
-	tr = &waukeen.Transaction{FITID: ""}
-	err = db.CreateTransaction(tr)
+		err := db.UpdateTransaction(tr)
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
 
-	if err == nil {
-		t.Errorf("wants error, got none")
-	}
+		want := []waukeen.Transaction{*tr}
+		got, err := db.FindTransactions(waukeen.TransactionsDBOptions{Accounts: []string{"1"}})
+
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+
+		if !reflect.DeepEqual(want, got) {
+			t.Errorf("wants\n%+v\ngot\n%+v", want, got)
+		}
+	})
+
+	t.Run("Invalid Transaction", func(t *testing.T) {
+		tr.FITID = ""
+		err := db.UpdateTransaction(tr)
+		if err == nil {
+			t.Errorf("wants error, got none")
+		}
+	})
 }
-
 func TestCreateRule(t *testing.T) {
 	db, path := testDB()
 	defer os.Remove(path)

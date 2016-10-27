@@ -60,6 +60,7 @@ func New(path string) (*DB, error) {
 		`,
 		`
 		CREATE TABLE IF NOT EXISTS transaction_tags(
+			id INTEGER PRIMARY KEY,
 			transaction_id INTEGER NOT NULL,
 			tag_id INTEGER NOT NULL,
 			FOREIGN KEY(transaction_id) REFERENCES transactions(id)
@@ -201,7 +202,44 @@ func (db *DB) CreateTransaction(t *waukeen.Transaction) error {
 }
 
 func (db *DB) UpdateTransaction(t *waukeen.Transaction) error {
-	return errors.New("not implemented")
+	q := fmt.Sprintf(`delete from transaction_tags where id in (select
+		transaction_tags.id from transaction_tags INNER JOIN tags on tags.id =
+		transaction_tags.tag_id where transaction_tags.transaction_id = ? AND
+		tags.name NOT IN (%s))`, toInCodition(t.Tags))
+
+	_, err := db.Exec(q, t.ID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, name := range t.Tags {
+		tag, err := db.FindTag(name)
+		if err != nil {
+			tag = &waukeen.Tag{Name: name}
+			err = db.CreateTag(tag)
+		}
+		if err != nil {
+			return fmt.Errorf("error updating transaction tag %s:", name, err)
+		}
+		q := `INSERT OR IGNORE into transaction_tags (transaction_id, tag_id) values (?, ?)`
+		_, err = db.Exec(q, t.ID, tag.ID)
+		if err != nil {
+			return fmt.Errorf("error updating transaction tag relation %s:", name, err)
+		}
+	}
+
+	q = `UPDATE transactions SET account_id = ?, fitid = ?, type = ?, title = ?,
+	alias = ?, description = ?, amount = ?, date = ? WHERE id = ?`
+
+	_, err = db.Exec(q, t.AccountID, t.FITID, t.Type, t.Title, t.Alias,
+		t.Description, t.Amount, t.Date, t.ID)
+
+	if err != nil {
+		return fmt.Errorf("error updating transaction: %s", err)
+	}
+
+	return nil
 }
 
 func (db *DB) DeleteTransaction(id string) error {
@@ -222,20 +260,13 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 	var clauses []string
 
 	if len(opts.Tags) > 0 {
-		tags := ""
-		for i, t := range opts.Tags {
-			if i > 0 {
-				tags += ", "
-			}
-			tags += "'" + t + "'"
-		}
 		query = `SELECT transactions.id, transactions.account_id,
 		transactions.fitid, transactions.type, transactions.title,
 		transactions.alias, transactions.description, transactions.amount,
 		transactions.date FROM transactions JOIN transaction_tags ON
 		transactions.id = transaction_tags.transaction_id JOIN tags ON tags.id
 		= transaction_tags.tag_id where `
-
+		tags := toInCodition(opts.Tags)
 		clauses = append(clauses, fmt.Sprintf("tags.name IN (%s)", tags))
 	} else {
 		query = `SELECT id, account_id, fitid, type, title, alias, description, amount, date
@@ -464,4 +495,8 @@ func (db *DB) FindTags(starts string) ([]waukeen.Tag, error) {
 	}
 	err = rows.Err()
 	return tags, err
+}
+
+func toInCodition(args []string) string {
+	return "'" + strings.Join(args, "', '") + "'"
 }

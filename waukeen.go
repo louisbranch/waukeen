@@ -79,16 +79,21 @@ type StatementsImporter interface {
 type Database interface {
 	CreateAccount(*Account) error
 	UpdateAccount(*Account) error
+	DeleteAccount(id string) error
 	FindAccount(number string) (*Account, error)
 	FindAccounts() ([]Account, error)
 
 	CreateTransaction(t *Transaction) error
+	UpdateTransaction(t *Transaction) error
+	DeleteTransaction(id string) error
 	FindTransactions(TransactionsDBOptions) ([]Transaction, error)
 
 	CreateRule(*Rule) error
+	DeleteRule(id string) error
 	FindRules(acc string) ([]Rule, error)
 
 	CreateTag(*Tag) error
+	DeleteTag(id string) error
 	FindTag(name string) (*Tag, error)
 	FindTags(starts string) ([]Tag, error)
 

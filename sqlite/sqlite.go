@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -113,6 +114,10 @@ func (db *DB) CreateAccount(a *waukeen.Account) error {
 	return nil
 }
 
+func (db *DB) DeleteAccount(id string) error {
+	return errors.New("not implemented")
+}
+
 func (db *DB) FindAccounts() ([]waukeen.Account, error) {
 	var accounts []waukeen.Account
 
@@ -193,6 +198,22 @@ func (db *DB) CreateTransaction(t *waukeen.Transaction) error {
 	}
 
 	return nil
+}
+
+func (db *DB) UpdateTransaction(t *waukeen.Transaction) error {
+	return errors.New("not implemented")
+}
+
+func (db *DB) DeleteTransaction(id string) error {
+	return errors.New("not implemented")
+}
+
+func (db *DB) DeleteRule(id string) error {
+	return errors.New("not implemented")
+}
+
+func (db *DB) DeleteTag(id string) error {
+	return errors.New("not implemented")
 }
 
 func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {

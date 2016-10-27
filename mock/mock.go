@@ -41,16 +41,21 @@ func (m *TransactionTransformer) Transform(t *waukeen.Transaction, r waukeen.Rul
 type Database struct {
 	CreateAccountMethod func(*waukeen.Account) error
 	UpdateAccountMethod func(*waukeen.Account) error
+	DeleteAccountMethod func(string) error
 	FindAccountMethod   func(number string) (*waukeen.Account, error)
 	FindAccountsMethod  func() ([]waukeen.Account, error)
 
-	CreateTransactionMethod func(t *waukeen.Transaction) error
+	CreateTransactionMethod func(*waukeen.Transaction) error
+	UpdateTransactionMethod func(*waukeen.Transaction) error
+	DeleteTransactionMethod func(string) error
 	FindTransactionsMethod  func(waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error)
 
 	CreateRuleMethod func(*waukeen.Rule) error
+	DeleteRuleMethod func(string) error
 	FindRulesMethod  func(acc string) ([]waukeen.Rule, error)
 
 	CreateTagMethod func(*waukeen.Tag) error
+	DeleteTagMethod func(string) error
 	FindTagMethod   func(name string) (*waukeen.Tag, error)
 	FindTagsMethod  func(starts string) ([]waukeen.Tag, error)
 
@@ -59,6 +64,10 @@ type Database struct {
 
 func (m *Database) CreateAccount(a *waukeen.Account) error {
 	return m.CreateAccountMethod(a)
+}
+
+func (m *Database) DeleteAccount(id string) error {
+	return m.DeleteAccountMethod(id)
 }
 
 func (m *Database) UpdateAccount(a *waukeen.Account) error {
@@ -77,12 +86,24 @@ func (m *Database) CreateTransaction(t *waukeen.Transaction) error {
 	return m.CreateTransactionMethod(t)
 }
 
+func (m *Database) UpdateTransaction(t *waukeen.Transaction) error {
+	return m.UpdateTransactionMethod(t)
+}
+
+func (m *Database) DeleteTransaction(id string) error {
+	return m.DeleteTransactionMethod(id)
+}
+
 func (m *Database) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
 	return m.FindTransactionsMethod(opts)
 }
 
 func (m *Database) CreateRule(r *waukeen.Rule) error {
 	return m.CreateRuleMethod(r)
+}
+
+func (m *Database) DeleteRule(id string) error {
+	return m.DeleteRuleMethod(id)
 }
 
 func (m *Database) FindRules(acc string) ([]waukeen.Rule, error) {
@@ -96,9 +117,15 @@ func (m *Database) CreateStatement(s waukeen.Statement, t waukeen.TransactionTra
 func (m *Database) CreateTag(t *waukeen.Tag) error {
 	return m.CreateTagMethod(t)
 }
+
 func (m *Database) FindTag(name string) (*waukeen.Tag, error) {
 	return m.FindTagMethod(name)
 }
+
 func (m *Database) FindTags(starts string) ([]waukeen.Tag, error) {
 	return m.FindTagsMethod(starts)
+}
+
+func (m *Database) DeleteTag(id string) error {
+	return m.DeleteTagMethod(id)
 }

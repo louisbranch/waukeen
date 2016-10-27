@@ -45,7 +45,7 @@ func New(path string) (*DB, error) {
 			description TEXT,
 			amount INTEGER,
 			date DATETIME,
-			FOREIGN KEY(account_id) REFERENCES accounts(id)
+			FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE
 		);
 		`,
 		`
@@ -63,8 +63,8 @@ func New(path string) (*DB, error) {
 			id INTEGER PRIMARY KEY,
 			transaction_id INTEGER NOT NULL,
 			tag_id INTEGER NOT NULL,
-			FOREIGN KEY(transaction_id) REFERENCES transactions(id)
-			FOREIGN KEY(tag_id) REFERENCES tags(id)
+			FOREIGN KEY(transaction_id) REFERENCES transactions(id) ON DELETE CASCADE
+			FOREIGN KEY(tag_id) REFERENCES tags(id) ON DELETE CASCADE
 		);
 		`,
 		`
@@ -78,7 +78,7 @@ func New(path string) (*DB, error) {
 			type INTEGER NOT NULL,
 			match TEXT NOT NULL CHECK(match <> ''),
 			result TEXT NOT NULL,
-			FOREIGN KEY(account_id) REFERENCES accounts(id)
+			FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE
 		);
 		`,
 	}
@@ -243,10 +243,6 @@ func (db *DB) UpdateTransaction(t *waukeen.Transaction) error {
 }
 
 func (db *DB) DeleteTransaction(id string) error {
-	return errors.New("not implemented")
-}
-
-func (db *DB) DeleteTag(id string) error {
 	return errors.New("not implemented")
 }
 
@@ -467,6 +463,10 @@ func (db *DB) CreateTag(t *waukeen.Tag) error {
 	t.ID = strconv.FormatInt(id, 10)
 
 	return nil
+}
+
+func (db *DB) DeleteTag(id string) error {
+	return errors.New("not implemented")
 }
 
 func (db *DB) FindTag(name string) (*waukeen.Tag, error) {

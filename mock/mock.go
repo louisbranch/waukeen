@@ -49,6 +49,7 @@ type Database struct {
 	UpdateTransactionMethod func(*waukeen.Transaction) error
 	DeleteTransactionMethod func(string) error
 	FindTransactionsMethod  func(waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error)
+	FindTransactionMethod   func(string) (*waukeen.Transaction, error)
 
 	CreateRuleMethod func(*waukeen.Rule) error
 	DeleteRuleMethod func(string) error
@@ -96,6 +97,10 @@ func (m *Database) DeleteTransaction(id string) error {
 
 func (m *Database) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
 	return m.FindTransactionsMethod(opts)
+}
+
+func (m *Database) FindTransaction(id string) (*waukeen.Transaction, error) {
+	return m.FindTransactionMethod(id)
 }
 
 func (m *Database) CreateRule(r *waukeen.Rule) error {

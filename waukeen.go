@@ -86,6 +86,7 @@ type Database interface {
 	CreateTransaction(t *Transaction) error
 	UpdateTransaction(t *Transaction) error
 	DeleteTransaction(id string) error
+	FindTransaction(id string) (*Transaction, error)
 	FindTransactions(TransactionsDBOptions) ([]Transaction, error)
 
 	CreateRule(*Rule) error

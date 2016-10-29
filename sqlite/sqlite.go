@@ -246,6 +246,28 @@ func (db *DB) DeleteTransaction(id string) error {
 	return errors.New("not implemented")
 }
 
+func (db *DB) FindTransaction(id string) (*waukeen.Transaction, error) {
+	q := `SELECT id, account_id, fitid, type, title, alias, description, amount,
+	date FROM transactions WHERE id = ?`
+
+	t := &waukeen.Transaction{}
+
+	err := db.QueryRow(q, id).Scan(&t.ID, &t.AccountID, &t.FITID, &t.Type,
+		&t.Title, &t.Alias, &t.Description, &t.Amount, &t.Date)
+
+	if err != nil {
+		return nil, err
+	}
+
+	tags, err := db.findTags(t.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	t.Tags = tags
+	return t, nil
+}
+
 func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
 	var transactions []waukeen.Transaction
 	var query string

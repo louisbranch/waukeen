@@ -64,6 +64,8 @@ func getTransactionForm(r *http.Request) waukeen.TransactionsDBOptions {
 				opt.Types[i] = waukeen.TransactionType(n)
 			}
 		}
+	} else {
+		opt.Types = []waukeen.TransactionType{waukeen.Debit}
 	}
 
 	var tags []string

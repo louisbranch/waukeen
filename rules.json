@@ -16,8 +16,18 @@
 	{"type": "tag", "match": "chipotle", "result": "restaurants"},
 	{"type": "tag", "match": "loblaws", "result": "groceries"},
 	{"type": "tag", "match": "sobeys", "result": "groceries"},
+	{"type": "tag", "match": "soylent", "result": "groceries"},
 	{"type": "tag", "match": "cineplex", "result": "entertainment"},
 	{"type": "tag", "match": "LCBO/RAO", "result": "liquor"},
 	{"type": "tag", "match": "beer", "result": "liquor"},
-	{"type": "tag", "match": "ttc", "result": "transportation"}
+	{"type": "tag", "match": "ttc", "result": "transportation"},
+	{"type": "tag", "match": "uber", "result": "transportation"},
+	{"type": "tag", "match": "pet", "result": "pet"},
+	{"type": "tag", "match": "bell", "result": "utitilies"},
+	{"type": "tag", "match": "wind mobile", "result": "utitilies"},
+	{"type": "tag", "match": "koodo mobile", "result": "utitilies"},
+	{"type": "tag", "match": "starbucks", "result": "restaurants"},
+	{"type": "tag", "match": "netflix.com", "result": "entertainment"},
+	{"type": "tag", "match": "animal", "result": "pet"},
+	{"type": "tag", "match": "sephora", "result": "personal care"}
 ]

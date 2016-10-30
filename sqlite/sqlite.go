@@ -174,7 +174,7 @@ func (db *DB) UpdateAccount(a *waukeen.Account) error {
 }
 
 func (db *DB) CreateTransaction(t *waukeen.Transaction) error {
-	q := `INSERT OR IGNORE into transactions
+	q := `INSERT into transactions
 	(account_id, fitid, type, title, alias, description, amount, date)
 	values (?, ?, ?, ?, ?, ?, ?, ?);`
 
@@ -183,12 +183,6 @@ func (db *DB) CreateTransaction(t *waukeen.Transaction) error {
 
 	if err != nil {
 		return fmt.Errorf("error creating transaction: %s", err)
-	}
-
-	created, _ := res.RowsAffected()
-
-	if created == 0 {
-		return fmt.Errorf("error creating invalid transaction: %v", t)
 	}
 
 	id, err := res.LastInsertId()
@@ -476,12 +470,22 @@ func (db *DB) CreateStatement(stmt waukeen.Statement,
 	}
 
 	for _, tn := range stmt.Transactions {
+		q := `SELECT EXISTS(SELECT 1 FROM transactions WHERE account_id=? AND
+		fitid=? LIMIT 1)`
+
+		var count int
+		err := db.QueryRow(q, acc.ID, tn.FITID).Scan(&count)
+
+		if count > 0 {
+			continue
+		}
+
 		t := &tn
 		t.AccountID = acc.ID
 		for _, r := range rules {
 			transformer.Transform(t, r)
 		}
-		err := db.CreateTransaction(t)
+		err = db.CreateTransaction(t)
 		if err != nil {
 			return err
 		}

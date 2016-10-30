@@ -593,10 +593,8 @@ func TestCreateStatement(t *testing.T) {
 
 	t.Run("Invalid Transaction", func(t *testing.T) {
 		stmt := waukeen.Statement{
-			Account: waukeen.Account{Number: "12345"},
-			Transactions: []waukeen.Transaction{
-				{},
-			},
+			Account:      waukeen.Account{Number: "12345"},
+			Transactions: []waukeen.Transaction{{Title: "FUCL"}},
 		}
 		err := db.CreateStatement(stmt, transformer)
 		if err == nil {

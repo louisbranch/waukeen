@@ -72,7 +72,11 @@ func (h *HTML) parse(names ...string) (tpl *template.Template, err error) {
 }
 
 func currency(amount int64) string {
-	return fmt.Sprintf("$%.2f", math.Abs(float64(amount))/100)
+	symbol := "$"
+	if amount < 0 {
+		symbol = "-" + symbol
+	}
+	return fmt.Sprintf("%s%.2f", symbol, math.Abs(float64(amount))/100)
 }
 
 func contains(list []string, item string) bool {

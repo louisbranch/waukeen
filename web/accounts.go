@@ -102,6 +102,10 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 
 		var total int64
 
+		for _, t := range transactions {
+			total += t.Amount
+		}
+
 		c := AccountContent{
 			Account:      &a,
 			Total:        total,

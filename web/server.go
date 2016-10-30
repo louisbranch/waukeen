@@ -40,6 +40,7 @@ func (srv *Server) NewServeMux() *http.ServeMux {
 	mux.HandleFunc("/rules", srv.rules)
 	mux.HandleFunc("/statements", srv.createStatement)
 	mux.HandleFunc("/statements/new", srv.newStatement)
+	mux.HandleFunc("/transactions/", srv.transactions)
 	mux.HandleFunc("/", srv.index)
 
 	return mux

@@ -18,5 +18,6 @@
 	{"type": "tag", "match": "sobeys", "result": "groceries"},
 	{"type": "tag", "match": "cineplex", "result": "entertainment"},
 	{"type": "tag", "match": "LCBO/RAO", "result": "liquor"},
+	{"type": "tag", "match": "beer", "result": "liquor"},
 	{"type": "tag", "match": "ttc", "result": "transportation"}
 ]

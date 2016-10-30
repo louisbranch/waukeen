@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Transaction</title>
+  </head>
+  <body>
+    <h1>Transaction</h1>
+    <form action="/transactions/" method="post">
+      <input type="hidden" name="id" value="{{ .ID }}"/>
+      <div>
+        <label for="alias">Title</label>
+        <input type="text" name="alias" value="{{ .Alias }}" />
+      </div>
+      <div>
+        <label for="description">Description</label>
+        <input type="text" name="description" value=" {{.Description}} "/>
+      </div>
+      <div>
+        <label for="transaction_type">Type:</label>
+        {{ $type := .Type }}
+        <select name="transaction_type">
+          <option value="1" {{ if eq $type 1 }} selected {{ end }}>Credit</option>
+          <option value="2" {{ if eq $type 2 }} selected {{ end }}>Debit</option>
+          <option value="0" {{ if eq $type 0 }} selected {{ end }}>Other</option>
+        </select>
+      </div>
+      <div>
+        <label for="amount">Amount</label>
+        <input type="number" name="amount" value="{{ .Amount }}" />
+      </div>
+      <div>
+        <label for="date">date</label>
+        <input type="date" name="date" value='{{ .Date.Format "2006-01-02" }}'>
+      </div>
+      <div>
+        <label for="tags">Tags</label>
+        <input type="text" name="tags" value="{{- range $index, $element := .Tags -}}{{if $index}}, {{end}}{{ $element }} {{- end -}}">
+      </div>
+      <div>
+        <input type="submit" value="Save" />
+      </div>
+    </form>
+  </body>
+</html>

@@ -62,6 +62,7 @@
           <th>Type</th>
           <th>Amount</th>
           <th>Tags</th>
+          <th></th>
         </tr>
         <tr>
           <th colspan="5">{{ .Total }}</th>
@@ -91,6 +92,9 @@
               {{if $index}}, {{end}}
               {{ $element }}
             {{- end -}}
+          </td>
+          <td>
+            <a href="/transactions/{{ .ID }}">Edit</a>
           </td>
         </tr>
         {{ end }}

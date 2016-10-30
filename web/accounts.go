@@ -2,7 +2,6 @@ package web
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,6 +9,30 @@ import (
 
 	"github.com/luizbranco/waukeen"
 )
+
+type accountForm struct {
+	Accounts []string
+	Types    []string
+	Tags     []string
+	Start    string
+	End      string
+}
+
+func newAccountForm(opt waukeen.TransactionsDBOptions) accountForm {
+	acc := accountForm{
+		Accounts: opt.Accounts,
+		Tags:     opt.Tags,
+	}
+
+	acc.Start = opt.Start.Format("2006-01-02")
+	acc.End = opt.End.Format("2006-01-02")
+
+	for _, t := range opt.Types {
+		acc.Types = append(acc.Types, strconv.Itoa(int(t)))
+	}
+
+	return acc
+}
 
 func getTransactionForm(r *http.Request) waukeen.TransactionsDBOptions {
 	opt := waukeen.TransactionsDBOptions{}
@@ -30,17 +53,16 @@ func getTransactionForm(r *http.Request) waukeen.TransactionsDBOptions {
 		}
 	}
 
-	number := r.FormValue("account")
-	log.Println(number)
-	if number != "" {
-		opt.Accounts = append(opt.Accounts, number)
-	}
+	opt.Accounts = r.Form["account"]
 
-	ttype := r.FormValue("transaction_type")
-	if ttype != "" {
-		i, err := strconv.Atoi(ttype)
-		if err == nil {
-			opt.Types = []waukeen.TransactionType{waukeen.TransactionType(i)}
+	ttype, ok := r.Form["transaction_type"]
+	if ok {
+		opt.Types = make([]waukeen.TransactionType, len(ttype))
+		for i, t := range ttype {
+			n, err := strconv.Atoi(t)
+			if err == nil {
+				opt.Types[i] = waukeen.TransactionType(n)
+			}
 		}
 	}
 
@@ -55,6 +77,27 @@ func getTransactionForm(r *http.Request) waukeen.TransactionsDBOptions {
 	if len(tags) > 0 {
 		opt.Tags = tags
 	}
+
+	now := time.Now()
+	year := now.Year()
+	month := now.Month()
+	startT := opt.Start
+	endT := opt.End
+
+	if startT.IsZero() {
+		startT = time.Date(year, month, 1, 0, 0, 0, 0, time.UTC)
+	}
+
+	if endT.IsZero() {
+		if month == time.December {
+			endT = time.Date(year, month, 31, 0, 0, 0, 0, time.UTC)
+		} else {
+			endT = time.Date(year, month+1, 1, 0, 0, 0, 0, time.UTC).Add(-24 * time.Hour)
+		}
+	}
+
+	opt.Start = startT
+	opt.End = endT
 
 	return opt
 }
@@ -86,13 +129,21 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 		total += t.Amount
 	}
 
+	ids := make([]string, len(accounts))
+
+	for i, acc := range accounts {
+		ids[i] = acc.ID
+	}
+
+	opt.Accounts = ids
+
 	content := struct {
-		Form         waukeen.TransactionsDBOptions
+		Form         accountForm
 		Accounts     []waukeen.Account
 		Transactions []waukeen.Transaction
 		Total        int64
 	}{
-		Form:         opt,
+		Form:         newAccountForm(opt),
 		Accounts:     accounts,
 		Transactions: transactions,
 		Total:        total,

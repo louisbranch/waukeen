@@ -19,7 +19,12 @@
       <div>
         <label for="transaction_type">Type:</label>
         <select name="transaction_type" multiple>
-          {{ range .Form.Types }}
+          {{ if $form.Types }}
+            <option value="1" {{ if contains $form.Types "1" }} selected {{ end }} >Credit</option>
+            <option value="2" {{ if contains $form.Types "2" }} selected {{ end }} >Debit</option>
+          {{ else }}
+            <option value="1" selected>Credit</option>
+            <option value="2" selected>Debit</option>
           {{ end }}
         </select>
       </div>

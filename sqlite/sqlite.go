@@ -325,7 +325,7 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 	}
 
 	if len(clauses) > 0 {
-		query := "WHERE "
+		query += "WHERE "
 		query += strings.Join(clauses, " AND ")
 	}
 

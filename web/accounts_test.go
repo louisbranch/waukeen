@@ -126,9 +126,9 @@ func TestAccounts(t *testing.T) {
 	t.Run("Valid Form Values", func(t *testing.T) {
 		db := &mock.Database{}
 		db.FindAccountsMethod = func(got ...string) ([]waukeen.Account, error) {
-			want := []string{"2"}
-			if !reflect.DeepEqual(got, want) {
-				t.Errorf("wants account id to be %s, got %v", want, got)
+			want := 0
+			if len(got) != 0 {
+				t.Errorf("wants account list to be %d length, got %d", want, got)
 			}
 			return []waukeen.Account{{ID: "2"}}, nil
 		}

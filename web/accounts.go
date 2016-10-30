@@ -2,6 +2,7 @@ package web
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -30,6 +31,7 @@ func getTransactionForm(r *http.Request) waukeen.TransactionsDBOptions {
 	}
 
 	number := r.FormValue("account")
+	log.Println(number)
 	if number != "" {
 		opt.Accounts = append(opt.Accounts, number)
 	}
@@ -65,7 +67,7 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 
 	opt := getTransactionForm(r)
 
-	accounts, err := srv.DB.FindAccounts(opt.Accounts...)
+	accounts, err := srv.DB.FindAccounts()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintln(w, err)

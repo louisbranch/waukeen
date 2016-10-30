@@ -132,7 +132,7 @@ func (db *DB) FindAccounts(ids ...string) ([]waukeen.Account, error) {
 
 	rows, err := db.Query(query)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error querying accounts: %s", err)
 	}
 	defer rows.Close()
 
@@ -140,12 +140,15 @@ func (db *DB) FindAccounts(ids ...string) ([]waukeen.Account, error) {
 		a := waukeen.Account{}
 		err = rows.Scan(&a.ID, &a.Number, &a.Name, &a.Type, &a.Currency, &a.Balance)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error scanning accounts: %s", err)
 		}
 		accounts = append(accounts, a)
 	}
 	err = rows.Err()
-	return accounts, err
+	if err != nil {
+		return nil, fmt.Errorf("error finding accounts: %s", err)
+	}
+	return accounts, nil
 }
 
 func (db *DB) FindAccount(number string) (*waukeen.Account, error) {
@@ -287,12 +290,12 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 		transactions.alias, transactions.description, transactions.amount,
 		transactions.date FROM transactions JOIN transaction_tags ON
 		transactions.id = transaction_tags.transaction_id JOIN tags ON tags.id
-		= transaction_tags.tag_id where `
+		= transaction_tags.tag_id  `
 		tags := toInCodition(opts.Tags)
 		clauses = append(clauses, fmt.Sprintf("tags.name IN (%s)", tags))
 	} else {
 		query = `SELECT id, account_id, fitid, type, title, alias, description, amount, date
-	FROM transactions WHERE `
+	FROM transactions `
 	}
 
 	if len(opts.Accounts) > 0 {
@@ -321,7 +324,10 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 		clauses = append(clauses, "transactions.date < "+end.Format("'2006-01-02'"))
 	}
 
-	query += strings.Join(clauses, " AND ")
+	if len(clauses) > 0 {
+		query := "WHERE "
+		query += strings.Join(clauses, " AND ")
+	}
 
 	if len(opts.Tags) > 0 {
 		query += "GROUP BY transactions.id"
@@ -329,7 +335,7 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 
 	rows, err := db.Query(query)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error querying transactions: %s (%s)", err, query)
 	}
 	defer rows.Close()
 
@@ -338,7 +344,7 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 		err = rows.Scan(&t.ID, &t.AccountID, &t.FITID, &t.Type, &t.Title, &t.Alias,
 			&t.Description, &t.Amount, &t.Date)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error scanning transactions: %s", err)
 		}
 
 		tags, err := db.findTags(t.ID)
@@ -350,7 +356,10 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 		transactions = append(transactions, t)
 	}
 	err = rows.Err()
-	return transactions, err
+	if err != nil {
+		return nil, fmt.Errorf("error finding transactions: %s", err)
+	}
+	return transactions, nil
 }
 
 func (db *DB) findTags(transaction string) ([]string, error) {

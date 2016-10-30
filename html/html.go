@@ -1,8 +1,11 @@
 package html
 
 import (
+	"fmt"
 	"html/template"
 	"io"
+	"math"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -33,8 +36,14 @@ func (h *HTML) Render(w io.Writer, data interface{}, paths ...string) error {
 	if err != nil {
 		return err
 	}
+
 	err = tpl.Execute(w, data)
 	return err
+}
+
+var fns = template.FuncMap{
+	"currency": currency,
+	"contains": contains,
 }
 
 func (h *HTML) parse(names ...string) (tpl *template.Template, err error) {
@@ -48,7 +57,9 @@ func (h *HTML) parse(names ...string) (tpl *template.Template, err error) {
 	h.sync.RUnlock()
 
 	if !ok {
-		tpl, err = template.ParseFiles(names...)
+		tpl = template.New(path.Base(names[0])).Funcs(fns)
+
+		tpl, err = tpl.ParseFiles(names...)
 		if err != nil {
 			return nil, err
 		}
@@ -60,8 +71,15 @@ func (h *HTML) parse(names ...string) (tpl *template.Template, err error) {
 	return tpl, nil
 }
 
-/*
-	fns := template.FuncMap{"currency": func(amount int64) string {
-		return fmt.Sprintf("$%.2f", math.Abs(float64(amount))/100)
-	}}
-*/
+func currency(amount int64) string {
+	return fmt.Sprintf("$%.2f", math.Abs(float64(amount))/100)
+}
+
+func contains(list []string, item string) bool {
+	for _, i := range list {
+		if i == item {
+			return true
+		}
+	}
+	return false
+}

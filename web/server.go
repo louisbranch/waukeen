@@ -3,7 +3,6 @@ package web
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/luizbranco/waukeen"
 )
@@ -14,21 +13,6 @@ type Server struct {
 	StatementsImporter waukeen.StatementsImporter
 	RulesImporter      waukeen.RulesImporter
 	Transformer        waukeen.TransactionTransformer
-}
-
-type TagCost struct {
-	Name  string
-	Count int
-	Total int64
-}
-
-type TagCosts []TagCost
-
-type AccountContent struct {
-	Account      *waukeen.Account
-	Total        int64
-	Transactions []waukeen.Transaction
-	TagCosts     []TagCost
 }
 
 func (srv *Server) NewServeMux() *http.ServeMux {
@@ -60,24 +44,4 @@ func (srv *Server) index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	srv.render(w, nil, "index")
-}
-
-func (t TagCosts) Len() int {
-	return len(t)
-}
-
-func (t TagCosts) Less(i, j int) bool {
-	if t[i].Name == "others" {
-		return false
-	}
-
-	if t[j].Name == "others" {
-		return true
-	}
-
-	return strings.Compare(t[i].Name, t[j].Name) < 0
-}
-
-func (t TagCosts) Swap(i, j int) {
-	t[i], t[j] = t[j], t[i]
 }

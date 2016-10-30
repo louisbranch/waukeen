@@ -43,7 +43,7 @@ type Database struct {
 	UpdateAccountMethod func(*waukeen.Account) error
 	DeleteAccountMethod func(string) error
 	FindAccountMethod   func(number string) (*waukeen.Account, error)
-	FindAccountsMethod  func() ([]waukeen.Account, error)
+	FindAccountsMethod  func(ids ...string) ([]waukeen.Account, error)
 
 	CreateTransactionMethod func(*waukeen.Transaction) error
 	UpdateTransactionMethod func(*waukeen.Transaction) error
@@ -79,8 +79,8 @@ func (m *Database) FindAccount(number string) (*waukeen.Account, error) {
 	return m.FindAccountMethod(number)
 }
 
-func (m *Database) FindAccounts() ([]waukeen.Account, error) {
-	return m.FindAccountsMethod()
+func (m *Database) FindAccounts(ids ...string) ([]waukeen.Account, error) {
+	return m.FindAccountsMethod(ids...)
 }
 
 func (m *Database) CreateTransaction(t *waukeen.Transaction) error {

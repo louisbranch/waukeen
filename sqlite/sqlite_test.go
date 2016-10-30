@@ -74,6 +74,14 @@ func TestFindAccounts(t *testing.T) {
 			Currency: "USD",
 			Balance:  -500,
 		},
+		{
+			ID:       "3",
+			Number:   "78901",
+			Name:     "Banking",
+			Type:     waukeen.Savings,
+			Currency: "USD",
+			Balance:  0,
+		},
 	}
 
 	for _, a := range want {
@@ -85,6 +93,17 @@ func TestFindAccounts(t *testing.T) {
 	}
 
 	got, err := db.FindAccounts()
+	if err != nil {
+		t.Errorf("wants no error, got %s", err)
+	}
+
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("wants %+v, got %+v", want, got)
+	}
+
+	want = want[1:]
+
+	got, err = db.FindAccounts("2", "3")
 	if err != nil {
 		t.Errorf("wants no error, got %s", err)
 	}

@@ -119,10 +119,18 @@ func (db *DB) DeleteAccount(id string) error {
 	return errors.New("not implemented")
 }
 
-func (db *DB) FindAccounts() ([]waukeen.Account, error) {
+func (db *DB) FindAccounts(ids ...string) ([]waukeen.Account, error) {
 	var accounts []waukeen.Account
+	var query string
 
-	rows, err := db.Query("SELECT id, number, name, type, currency, balance FROM accounts")
+	if len(ids) == 0 {
+		query = "SELECT id, number, name, type, currency, balance FROM accounts"
+	} else {
+		query = fmt.Sprintf(`SELECT id, number, name, type, currency, balance FROM
+		accounts where id IN (%s)`, toInCodition(ids))
+	}
+
+	rows, err := db.Query(query)
 	if err != nil {
 		return nil, err
 	}

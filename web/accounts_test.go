@@ -23,9 +23,12 @@ func TestAccounts(t *testing.T) {
 		}
 	})
 
-	t.Run("Empty accounts list", func(t *testing.T) {
+	t.Run("Empty accounts and transactions list", func(t *testing.T) {
 		db := &mock.Database{}
-		db.FindAccountsMethod = func() ([]waukeen.Account, error) {
+		db.FindAccountsMethod = func(ids ...string) ([]waukeen.Account, error) {
+			return nil, nil
+		}
+		db.FindTransactionsMethod = func(waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
 			return nil, nil
 		}
 		srv := &Server{DB: db}
@@ -40,7 +43,7 @@ func TestAccounts(t *testing.T) {
 
 	t.Run("Find accounts DB error", func(t *testing.T) {
 		db := &mock.Database{}
-		db.FindAccountsMethod = func() ([]waukeen.Account, error) {
+		db.FindAccountsMethod = func(ids ...string) ([]waukeen.Account, error) {
 			return nil, errors.New("not implemented")
 		}
 		srv := &Server{DB: db}
@@ -55,7 +58,7 @@ func TestAccounts(t *testing.T) {
 
 	t.Run("Find transactions DB error", func(t *testing.T) {
 		db := &mock.Database{}
-		db.FindAccountsMethod = func() ([]waukeen.Account, error) {
+		db.FindAccountsMethod = func(ids ...string) ([]waukeen.Account, error) {
 			return []waukeen.Account{{Number: "12345"}}, nil
 		}
 		db.FindTransactionsMethod = func(waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
@@ -73,13 +76,13 @@ func TestAccounts(t *testing.T) {
 
 	t.Run("Empty Form", func(t *testing.T) {
 		db := &mock.Database{}
-		db.FindAccountsMethod = func() ([]waukeen.Account, error) {
+		db.FindAccountsMethod = func(ids ...string) ([]waukeen.Account, error) {
 			return []waukeen.Account{{ID: "1"}}, nil
 		}
-		db.FindTransactionsMethod = func(opts waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
-			empty := waukeen.TransactionsDBOptions{Accounts: []string{"1"}}
-			if !reflect.DeepEqual(opts, empty) {
-				t.Errorf("wants options to be %+v, got %+v", empty, opts)
+		db.FindTransactionsMethod = func(got waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
+			want := waukeen.TransactionsDBOptions{}
+			if !reflect.DeepEqual(got, want) {
+				t.Errorf("wants %+v, got %+v", want, got)
 			}
 			return nil, nil
 		}
@@ -95,13 +98,13 @@ func TestAccounts(t *testing.T) {
 
 	t.Run("Invalid Form Values", func(t *testing.T) {
 		db := &mock.Database{}
-		db.FindAccountsMethod = func() ([]waukeen.Account, error) {
+		db.FindAccountsMethod = func(ids ...string) ([]waukeen.Account, error) {
 			return []waukeen.Account{{ID: "1"}}, nil
 		}
-		db.FindTransactionsMethod = func(opts waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
-			empty := waukeen.TransactionsDBOptions{Accounts: []string{"1"}}
-			if !reflect.DeepEqual(opts, empty) {
-				t.Errorf("wants options to be %+v, got %+v", empty, opts)
+		db.FindTransactionsMethod = func(got waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
+			want := waukeen.TransactionsDBOptions{}
+			if !reflect.DeepEqual(got, want) {
+				t.Errorf("wants %+v, got %+v", want, got)
 			}
 			return nil, nil
 		}
@@ -122,11 +125,12 @@ func TestAccounts(t *testing.T) {
 
 	t.Run("Valid Form Values", func(t *testing.T) {
 		db := &mock.Database{}
-		db.FindAccountMethod = func(id string) (*waukeen.Account, error) {
-			if id != "2" {
-				t.Errorf("wants account id to be 2, got %s", id)
+		db.FindAccountsMethod = func(got ...string) ([]waukeen.Account, error) {
+			want := []string{"2"}
+			if !reflect.DeepEqual(got, want) {
+				t.Errorf("wants account id to be %s, got %v", want, got)
 			}
-			return &waukeen.Account{ID: "2"}, nil
+			return []waukeen.Account{{ID: "2"}}, nil
 		}
 		db.FindTransactionsMethod = func(opts waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
 			filled := waukeen.TransactionsDBOptions{

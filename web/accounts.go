@@ -10,19 +10,14 @@ import (
 	"github.com/luizbranco/waukeen"
 )
 
-func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	opts := waukeen.TransactionsDBOptions{}
+func getTransactionForm(r *http.Request) waukeen.TransactionsDBOptions {
+	opt := waukeen.TransactionsDBOptions{}
 
 	start := r.FormValue("start")
 	if start != "" {
 		t, err := time.Parse("2006-01-02", start)
 		if err == nil {
-			opts.Start = t
+			opt.Start = t
 		}
 	}
 
@@ -30,26 +25,20 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 	if end != "" {
 		t, err := time.Parse("2006-01-02", end)
 		if err == nil {
-			opts.End = t
+			opt.End = t
 		}
 	}
 
-	var accs []waukeen.Account
-	var err error
 	number := r.FormValue("account")
-
 	if number != "" {
-		acc, err := srv.DB.FindAccount(number)
-		if err == nil {
-			accs = append(accs, *acc)
-		}
+		opt.Accounts = append(opt.Accounts, number)
 	}
 
 	ttype := r.FormValue("transaction_type")
 	if ttype != "" {
 		i, err := strconv.Atoi(ttype)
 		if err == nil {
-			opts.Types = []waukeen.TransactionType{waukeen.TransactionType(i)}
+			opt.Types = []waukeen.TransactionType{waukeen.TransactionType(i)}
 		}
 	}
 
@@ -62,57 +51,49 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if len(tags) > 0 {
-		opts.Tags = tags
+		opt.Tags = tags
 	}
 
-	type form struct {
-		Account string
-		Start   string
-		End     string
-		Type    string
-		Tags    []string
+	return opt
+}
+
+func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	opt := getTransactionForm(r)
+
+	accounts, err := srv.DB.FindAccounts(opt.Accounts...)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, err)
+		return
+	}
+
+	transactions, err := srv.DB.FindTransactions(opt)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, err)
+		return
+	}
+
+	var total int64
+	for _, t := range transactions {
+		total += t.Amount
 	}
 
 	content := struct {
-		Form           form
-		AccountContent []AccountContent
+		Form         waukeen.TransactionsDBOptions
+		Accounts     []waukeen.Account
+		Transactions []waukeen.Transaction
+		Total        int64
 	}{
-		Form: form{Account: number, Start: start, End: end, Type: ttype, Tags: tags},
-	}
-
-	if len(accs) == 0 {
-		accs, err = srv.DB.FindAccounts()
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintln(w, err)
-			return
-		}
-
-	}
-
-	for _, a := range accs {
-		opts.Accounts = []string{a.ID}
-		transactions, err := srv.DB.FindTransactions(opts)
-
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintln(w, err)
-			return
-		}
-
-		var total int64
-
-		for _, t := range transactions {
-			total += t.Amount
-		}
-
-		c := AccountContent{
-			Account:      &a,
-			Total:        total,
-			Transactions: transactions,
-		}
-
-		content.AccountContent = append(content.AccountContent, c)
+		Form:         opt,
+		Accounts:     accounts,
+		Transactions: transactions,
+		Total:        total,
 	}
 
 	srv.render(w, content, "accounts")

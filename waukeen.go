@@ -81,7 +81,7 @@ type Database interface {
 	UpdateAccount(*Account) error
 	DeleteAccount(id string) error
 	FindAccount(number string) (*Account, error)
-	FindAccounts() ([]Account, error)
+	FindAccounts(ids ...string) ([]Account, error)
 
 	CreateTransaction(t *Transaction) error
 	UpdateTransaction(t *Transaction) error
@@ -107,6 +107,8 @@ type TransactionsDBOptions struct {
 	Start    time.Time
 	End      time.Time
 	Tags     []string
+	Limit    int
+	Offset   int
 }
 
 type TransactionTransformer interface {
@@ -115,6 +117,18 @@ type TransactionTransformer interface {
 
 type Template interface {
 	Render(w io.Writer, data interface{}, paths ...string) error
+}
+
+func (t *Transaction) AddTags(tags ...string) {
+OUTER:
+	for _, name := range tags {
+		for _, t := range t.Tags {
+			if t == name {
+				continue OUTER
+			}
+		}
+		t.Tags = append(t.Tags, name)
+	}
 }
 
 func (t AccountType) String() string {

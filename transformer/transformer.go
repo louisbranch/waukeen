@@ -21,15 +21,6 @@ func (Text) Transform(t *waukeen.Transaction, r waukeen.Rule) {
 		if !re.MatchString(t.Title) {
 			return
 		}
-		found := false
-		for _, t := range t.Tags {
-			if t == r.Result {
-				found = true
-				break
-			}
-		}
-		if !found {
-			t.Tags = append(t.Tags, r.Result)
-		}
+		t.AddTags(r.Result)
 	}
 }

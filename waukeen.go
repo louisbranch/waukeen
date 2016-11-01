@@ -7,6 +7,7 @@ import (
 
 type AccountType int
 type TransactionType int
+type BudgetPeriod int
 type RuleType int
 
 const (
@@ -14,15 +15,13 @@ const (
 	Checking
 	Savings
 	CreditCard
-)
 
-const (
 	OtherTransaction TransactionType = iota
 	Credit
 	Debit
-)
 
-const (
+	Monthly BudgetPeriod = iota
+
 	UnknownRule RuleType = iota
 	ReplaceRule
 	TagRule
@@ -61,6 +60,12 @@ type Rule struct {
 	Type      RuleType
 	Match     string
 	Result    string
+}
+
+type Budget struct {
+	TagID  string
+	Period BudgetPeriod
+	Amount int64
 }
 
 type RulesImporter interface {

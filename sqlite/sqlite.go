@@ -72,6 +72,14 @@ func New(path string) (*DB, error) {
 		transaction_tags(transaction_id, tag_id)
 		`,
 		`
+		CREATE TABLE IF NOT EXISTS budgets(
+			id INTEGER PRIMARY KEY,
+			tag_id INTEGER NOT NULL,
+			period INTEGER NOT NULL,
+			FOREIGN KEY(tag_id) REFERENCES tags(id) ON DELETE CASCADE
+		);
+		`,
+		`
 		CREATE TABLE IF NOT EXISTS rules(
 			id INTEGER PRIMARY KEY,
 			account_id INTEGER,

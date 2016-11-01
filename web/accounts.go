@@ -24,8 +24,8 @@ func newAccountForm(opt waukeen.TransactionsDBOptions) accountForm {
 		Tags:     opt.Tags,
 	}
 
-	acc.Start = opt.Start.Format("2006-01-02")
-	acc.End = opt.End.Format("2006-01-02")
+	acc.Start = opt.Start.Format("2006-01")
+	acc.End = opt.End.Format("2006-01")
 
 	for _, t := range opt.Types {
 		acc.Types = append(acc.Types, strconv.Itoa(int(t)))
@@ -39,7 +39,7 @@ func getTransactionForm(r *http.Request) waukeen.TransactionsDBOptions {
 
 	start := r.FormValue("start")
 	if start != "" {
-		t, err := time.Parse("2006-01-02", start)
+		t, err := time.Parse("2006-01", start)
 		if err == nil {
 			opt.Start = t
 		}
@@ -47,7 +47,7 @@ func getTransactionForm(r *http.Request) waukeen.TransactionsDBOptions {
 
 	end := r.FormValue("end")
 	if end != "" {
-		t, err := time.Parse("2006-01-02", end)
+		t, err := time.Parse("2006-01", end)
 		if err == nil {
 			opt.End = t
 		}
@@ -81,25 +81,26 @@ func getTransactionForm(r *http.Request) waukeen.TransactionsDBOptions {
 	}
 
 	now := time.Now()
-	year := now.Year()
-	month := now.Month()
-	startT := opt.Start
-	endT := opt.End
+	var year int
+	var month time.Month
 
-	if startT.IsZero() {
-		startT = time.Date(year, month, 1, 0, 0, 0, 0, time.UTC)
+	if opt.Start.IsZero() {
+		opt.Start = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 	}
 
-	if endT.IsZero() {
-		if month == time.December {
-			endT = time.Date(year, month, 31, 0, 0, 0, 0, time.UTC)
-		} else {
-			endT = time.Date(year, month+1, 1, 0, 0, 0, 0, time.UTC).Add(-24 * time.Hour)
-		}
+	if opt.End.IsZero() {
+		month = now.Month()
+		year = now.Year()
+	} else {
+		month = opt.End.Month()
+		year = opt.End.Year()
 	}
 
-	opt.Start = startT
-	opt.End = endT
+	if month == time.December {
+		opt.End = time.Date(year, month, 31, 0, 0, 0, 0, time.UTC)
+	} else {
+		opt.End = time.Date(year, month+1, 1, 0, 0, 0, 0, time.UTC).Add(-24 * time.Hour)
+	}
 
 	return opt
 }

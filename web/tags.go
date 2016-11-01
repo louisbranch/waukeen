@@ -19,8 +19,8 @@ func (srv *Server) newTag(w http.ResponseWriter, r *http.Request) {
 func (srv *Server) tags(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		id := r.URL.Path[len("/transactions/"):]
-		if id == "" {
+		name := r.URL.Path[len("/tags/"):]
+		if name == "" {
 			tags, err := srv.DB.FindTags("")
 
 			if err != nil {
@@ -33,7 +33,7 @@ func (srv *Server) tags(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		t, err := srv.DB.FindTag(id)
+		t, err := srv.DB.FindTag(name)
 		if err != nil {
 			srv.render(w, nil, "404")
 			return

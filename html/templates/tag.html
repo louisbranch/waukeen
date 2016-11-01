@@ -9,9 +9,11 @@
     <form action="/tags/" method="post">
       <input type="hidden" name="id" value="{{ .ID }}" />
       <div>
+        <label for="name">Name</label>
         <input type="text" name="name" value="{{ .Name }}"/>
       </div>
       <div>
+        <label for="budget">Budget</label>
         <input type="text" name="budget" value='{{ .Budget }}' />
       </div>
       <div>

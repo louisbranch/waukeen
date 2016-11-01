@@ -140,8 +140,8 @@ func TestAccounts(t *testing.T) {
 			filled := waukeen.TransactionsDBOptions{
 				Accounts: []string{"2"},
 				Types:    []waukeen.TransactionType{waukeen.Credit},
-				Start:    time.Date(2016, 10, 24, 0, 0, 0, 0, time.UTC),
-				End:      time.Date(2016, 10, 30, 0, 0, 0, 0, time.UTC),
+				Start:    time.Date(2016, 10, 01, 0, 0, 0, 0, time.UTC),
+				End:      time.Date(2016, 10, 31, 0, 0, 0, 0, time.UTC),
 				Tags:     []string{"first", "second"},
 			}
 			if !reflect.DeepEqual(opts, filled) {
@@ -152,8 +152,8 @@ func TestAccounts(t *testing.T) {
 		srv := &Server{DB: db}
 		req := httptest.NewRequest("GET", "/accounts", nil)
 		req.Form = url.Values{}
-		req.Form.Set("start", "2016-10-24")
-		req.Form.Set("end", "2016-10-30")
+		req.Form.Set("start", "2016-10")
+		req.Form.Set("end", "2016-10")
 		req.Form.Set("transaction_type", "1")
 		req.Form.Set("tags", "first, second ")
 		req.Form.Set("account", "2")

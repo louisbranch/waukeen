@@ -85,7 +85,6 @@ func New(path string) (*DB, error) {
 		CREATE TABLE IF NOT EXISTS budgets(
 			id INTEGER PRIMARY KEY,
 			tag_id INTEGER NOT NULL UNIQUE,
-			period INTEGER NOT NULL,
 			amount INTEGER,
 			FOREIGN KEY(tag_id) REFERENCES tags(id) ON DELETE CASCADE
 		);
@@ -576,9 +575,9 @@ func (db *DB) FindTags(starts string) ([]waukeen.Tag, error) {
 }
 
 func (db *DB) CreateBudget(b *waukeen.Budget) error {
-	q := `INSERT into budgets (tag_id, period, amount) values (?, ?, ?)`
+	q := `INSERT into budgets (tag_id, amount) values (?, ?)`
 
-	res, err := db.Exec(q, b.TagID, b.Period, b.Amount)
+	res, err := db.Exec(q, b.TagID, b.Amount)
 
 	if err != nil {
 		return fmt.Errorf("error creating budget: %s", err)
@@ -600,11 +599,11 @@ func (db *DB) DeleteBudget(id string) error {
 }
 
 func (db *DB) FindBudget(id string) (*waukeen.Budget, error) {
-	q := "SELECT id, tag_id, period, amount FROM budgets where id = ?"
+	q := "SELECT id, tag_id, amount FROM budgets where id = ?"
 
 	b := &waukeen.Budget{}
 
-	err := db.QueryRow(q, id).Scan(&b.ID, &b.TagID, &b.Period, &b.Amount)
+	err := db.QueryRow(q, id).Scan(&b.ID, &b.TagID, &b.Amount)
 
 	if err != nil {
 		return nil, fmt.Errorf("error finding budget: %s", err)
@@ -616,7 +615,7 @@ func (db *DB) FindBudget(id string) (*waukeen.Budget, error) {
 func (db *DB) FindBudgets(tags ...string) ([]waukeen.Budget, error) {
 	var budgets []waukeen.Budget
 
-	q := fmt.Sprintf(`SELECT id, tag_id, period, amount FROM budgets where id IN (%s)`,
+	q := fmt.Sprintf(`SELECT id, tag_id, amount FROM budgets where id IN (%s)`,
 		toInCodition(tags))
 
 	rows, err := db.Query(q)
@@ -627,7 +626,7 @@ func (db *DB) FindBudgets(tags ...string) ([]waukeen.Budget, error) {
 
 	for rows.Next() {
 		b := waukeen.Budget{}
-		err = rows.Scan(&b.ID, &b.TagID, &b.Period, &b.Amount)
+		err = rows.Scan(&b.ID, &b.TagID, &b.Amount)
 		if err != nil {
 			return nil, err
 		}

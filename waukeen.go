@@ -7,7 +7,6 @@ import (
 
 type AccountType int
 type TransactionType int
-type BudgetPeriod int
 type RuleType int
 
 const (
@@ -21,10 +20,6 @@ const (
 	OtherTransaction TransactionType = iota
 	Credit
 	Debit
-)
-
-const (
-	Monthly BudgetPeriod = iota
 )
 
 const (
@@ -70,7 +65,6 @@ type Rule struct {
 type Budget struct {
 	ID     string
 	TagID  string
-	Period BudgetPeriod
 	Amount int64
 }
 

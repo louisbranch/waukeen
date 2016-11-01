@@ -19,7 +19,7 @@ func (srv *Server) newRule(w http.ResponseWriter, r *http.Request) {
 func (srv *Server) rules(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		rules, err := srv.DB.FindRules("")
+		rules, err := srv.DB.FindRules()
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

@@ -22,8 +22,10 @@ func (srv *Server) NewServeMux() *http.ServeMux {
 	mux.HandleFunc("/rules/import", srv.importRules)
 	mux.HandleFunc("/rules/new", srv.newRule)
 	mux.HandleFunc("/rules", srv.rules)
-	mux.HandleFunc("/statements", srv.createStatement)
 	mux.HandleFunc("/statements/new", srv.newStatement)
+	mux.HandleFunc("/statements", srv.createStatement)
+	mux.HandleFunc("/tags/new", srv.newTag)
+	mux.HandleFunc("/tags/", srv.tags)
 	mux.HandleFunc("/transactions/", srv.transactions)
 	mux.HandleFunc("/", srv.index)
 

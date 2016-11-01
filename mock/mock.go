@@ -60,11 +60,6 @@ type Database struct {
 	FindTagMethod   func(name string) (*waukeen.Tag, error)
 	FindTagsMethod  func(starts string) ([]waukeen.Tag, error)
 
-	CreateBudgetMethod func(*waukeen.Budget) error
-	DeleteBudgetMethod func(id string) error
-	FindBudgetMethod   func(id string) (*waukeen.Budget, error)
-	FindBudgetsMethod  func(tags ...string) ([]waukeen.Budget, error)
-
 	CreateStatementMethod func(waukeen.Statement, waukeen.TransactionTransformer) error
 }
 
@@ -138,20 +133,4 @@ func (m *Database) FindTags(starts string) ([]waukeen.Tag, error) {
 
 func (m *Database) DeleteTag(id string) error {
 	return m.DeleteTagMethod(id)
-}
-
-func (m *Database) CreateBudget(b *waukeen.Budget) error {
-	return m.CreateBudgetMethod(b)
-}
-
-func (m *Database) FindBudget(id string) (*waukeen.Budget, error) {
-	return m.FindBudgetMethod(id)
-}
-
-func (m *Database) FindBudgets(tags ...string) ([]waukeen.Budget, error) {
-	return m.FindBudgetsMethod(tags...)
-}
-
-func (m *Database) DeleteBudget(id string) error {
-	return m.DeleteBudgetMethod(id)
 }

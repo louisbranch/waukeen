@@ -51,8 +51,9 @@ type Transaction struct {
 }
 
 type Tag struct {
-	ID   string
-	Name string
+	ID     string
+	Name   string
+	Budget int64
 }
 
 type Rule struct {
@@ -60,12 +61,6 @@ type Rule struct {
 	Type   RuleType
 	Match  string
 	Result string
-}
-
-type Budget struct {
-	ID     string
-	TagID  string
-	Amount int64
 }
 
 type RulesImporter interface {
@@ -102,11 +97,6 @@ type Database interface {
 	DeleteTag(id string) error
 	FindTag(name string) (*Tag, error)
 	FindTags(starts string) ([]Tag, error)
-
-	CreateBudget(*Budget) error
-	DeleteBudget(id string) error
-	FindBudget(id string) (*Budget, error)
-	FindBudgets(tags ...string) ([]Budget, error)
 
 	CreateStatement(Statement, TransactionTransformer) error
 }

@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"reflect"
-	"strconv"
 	"testing"
 	"time"
 
@@ -24,18 +23,6 @@ func testAccount(db *DB) *waukeen.Account {
 		log.Fatal(err)
 	}
 	return acc
-}
-
-var tagCounter = 0
-
-func testTag(db *DB) *waukeen.Tag {
-	tagCounter++
-	tag := &waukeen.Tag{Name: "test_" + strconv.Itoa(tagCounter)}
-	err := db.CreateTag(tag)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return tag
 }
 
 func testDB() (*DB, string) {
@@ -681,7 +668,7 @@ func TestCreateTag(t *testing.T) {
 	})
 
 	t.Run("Valid Tag", func(t *testing.T) {
-		tag := &waukeen.Tag{Name: "Test"}
+		tag := &waukeen.Tag{Name: "Test", Budget: 1000}
 		err := db.CreateTag(tag)
 		if err != nil {
 			t.Errorf("wants no error, got %s", err)
@@ -704,9 +691,9 @@ func TestFindTags(t *testing.T) {
 	db, path := testDB()
 	defer os.Remove(path)
 
-	t1 := waukeen.Tag{ID: "1", Name: "foo"}
-	t2 := waukeen.Tag{ID: "2", Name: "bar"}
-	t3 := waukeen.Tag{ID: "3", Name: "baz"}
+	t1 := waukeen.Tag{ID: "1", Name: "foo", Budget: 500}
+	t2 := waukeen.Tag{ID: "2", Name: "bar", Budget: 100}
+	t3 := waukeen.Tag{ID: "3", Name: "baz", Budget: 0}
 
 	for _, tag := range []waukeen.Tag{t1, t2, t3} {
 		err := db.CreateTag(&tag)
@@ -728,81 +715,6 @@ func TestFindTags(t *testing.T) {
 	t.Run("Multiple Matches", func(t *testing.T) {
 		want := []waukeen.Tag{t2, t3}
 		got, err := db.FindTags("ba")
-		if err != nil {
-			t.Errorf("wants no error, got %s", err)
-		}
-		if !reflect.DeepEqual(want, got) {
-			t.Errorf("wants %+v, got %+v", want, got)
-		}
-	})
-}
-
-func TestCreateBudget(t *testing.T) {
-	db, path := testDB()
-	defer os.Remove(path)
-
-	tag := testTag(db)
-
-	t.Run("Invalid Budget", func(t *testing.T) {
-		budget := &waukeen.Budget{}
-		err := db.CreateBudget(budget)
-		if err == nil {
-			t.Errorf("wants error, got none")
-		}
-	})
-
-	t.Run("Valid Budget", func(t *testing.T) {
-		budget := &waukeen.Budget{TagID: tag.ID}
-		err := db.CreateBudget(budget)
-		if err != nil {
-			t.Errorf("wants no error, got %s", err)
-		}
-		if budget.ID != "1" {
-			t.Errorf("wants budget id %s, got %s", "1", budget.ID)
-		}
-	})
-
-	t.Run("Duplicated Budget", func(t *testing.T) {
-		budget := &waukeen.Budget{TagID: tag.ID}
-		err := db.CreateBudget(budget)
-		if err == nil {
-			t.Errorf("wants error, got none")
-		}
-	})
-}
-
-func TestFindBudgets(t *testing.T) {
-	db, path := testDB()
-	defer os.Remove(path)
-
-	tag1 := testTag(db)
-	tag2 := testTag(db)
-	tag3 := testTag(db)
-
-	b1 := waukeen.Budget{ID: "1", TagID: tag1.ID, Amount: 100}
-	b2 := waukeen.Budget{ID: "2", TagID: tag2.ID, Amount: 500}
-	b3 := waukeen.Budget{ID: "3", TagID: tag3.ID, Amount: 900}
-
-	for _, budget := range []waukeen.Budget{b1, b2, b3} {
-		err := db.CreateBudget(&budget)
-		if err != nil {
-			t.Errorf("wants no error, got %s", err)
-		}
-	}
-
-	t.Run("No Match", func(t *testing.T) {
-		budgets, err := db.FindBudgets("0")
-		if err != nil {
-			t.Errorf("wants no error, got %s", err)
-		}
-		if len(budgets) != 0 {
-			t.Errorf("wants no budgets, got %+v", budgets)
-		}
-	})
-
-	t.Run("Multiple Matches", func(t *testing.T) {
-		want := []waukeen.Budget{b2, b3}
-		got, err := db.FindBudgets(tag2.ID, tag3.ID)
 		if err != nil {
 			t.Errorf("wants no error, got %s", err)
 		}

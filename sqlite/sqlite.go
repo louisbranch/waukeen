@@ -65,7 +65,8 @@ func New(path string) (*DB, error) {
 		`
 		CREATE TABLE IF NOT EXISTS tags(
 			id INTEGER PRIMARY KEY,
-			name TEXT NOT NULL UNIQUE CHECK(name <> '')
+			name TEXT NOT NULL UNIQUE CHECK(name <> ''),
+			budget INTEGER
 		);
 		`,
 		`
@@ -80,14 +81,6 @@ func New(path string) (*DB, error) {
 		`
 		CREATE UNIQUE INDEX IF NOT EXISTS transaction_tag ON
 		transaction_tags(transaction_id, tag_id)
-		`,
-		`
-		CREATE TABLE IF NOT EXISTS budgets(
-			id INTEGER PRIMARY KEY,
-			tag_id INTEGER NOT NULL UNIQUE,
-			amount INTEGER,
-			FOREIGN KEY(tag_id) REFERENCES tags(id) ON DELETE CASCADE
-		);
 		`,
 		`
 		CREATE TABLE IF NOT EXISTS rules(
@@ -515,9 +508,9 @@ func (db *DB) CreateStatement(stmt waukeen.Statement,
 }
 
 func (db *DB) CreateTag(t *waukeen.Tag) error {
-	q := `INSERT into tags (name) values (?)`
+	q := `INSERT into tags (name, budget) values (?, ?)`
 
-	res, err := db.Exec(q, t.Name, t.Name)
+	res, err := db.Exec(q, t.Name, t.Budget)
 
 	if err != nil {
 		return fmt.Errorf("error creating tag: %s", err)
@@ -539,11 +532,11 @@ func (db *DB) DeleteTag(id string) error {
 }
 
 func (db *DB) FindTag(name string) (*waukeen.Tag, error) {
-	q := "SELECT id, name FROM tags where name = ?"
+	q := "SELECT id, name, budget FROM tags where name = ?"
 
 	t := &waukeen.Tag{}
 
-	err := db.QueryRow(q, name).Scan(&t.ID, &t.Name)
+	err := db.QueryRow(q, name).Scan(&t.ID, &t.Name, &t.Budget)
 
 	if err != nil {
 		return nil, fmt.Errorf("error finding tag: %s", err)
@@ -556,7 +549,8 @@ func (db *DB) FindTags(starts string) ([]waukeen.Tag, error) {
 	var tags []waukeen.Tag
 
 	starts += "%"
-	rows, err := db.Query("SELECT id, name FROM tags where name LIKE ?", starts)
+	rows, err := db.Query("SELECT id, name, budget FROM tags where name LIKE ?",
+		starts)
 	if err != nil {
 		return nil, err
 	}
@@ -564,7 +558,7 @@ func (db *DB) FindTags(starts string) ([]waukeen.Tag, error) {
 
 	for rows.Next() {
 		t := waukeen.Tag{}
-		err = rows.Scan(&t.ID, &t.Name)
+		err = rows.Scan(&t.ID, &t.Name, &t.Budget)
 		if err != nil {
 			return nil, err
 		}
@@ -572,68 +566,6 @@ func (db *DB) FindTags(starts string) ([]waukeen.Tag, error) {
 	}
 	err = rows.Err()
 	return tags, err
-}
-
-func (db *DB) CreateBudget(b *waukeen.Budget) error {
-	q := `INSERT into budgets (tag_id, amount) values (?, ?)`
-
-	res, err := db.Exec(q, b.TagID, b.Amount)
-
-	if err != nil {
-		return fmt.Errorf("error creating budget: %s", err)
-	}
-
-	id, err := res.LastInsertId()
-
-	if err != nil {
-		return fmt.Errorf("error retrieving last budget id: %s", err)
-	}
-
-	b.ID = strconv.FormatInt(id, 10)
-
-	return nil
-}
-
-func (db *DB) DeleteBudget(id string) error {
-	return errors.New("not implemented")
-}
-
-func (db *DB) FindBudget(id string) (*waukeen.Budget, error) {
-	q := "SELECT id, tag_id, amount FROM budgets where id = ?"
-
-	b := &waukeen.Budget{}
-
-	err := db.QueryRow(q, id).Scan(&b.ID, &b.TagID, &b.Amount)
-
-	if err != nil {
-		return nil, fmt.Errorf("error finding budget: %s", err)
-	}
-
-	return b, nil
-}
-
-func (db *DB) FindBudgets(tags ...string) ([]waukeen.Budget, error) {
-	var budgets []waukeen.Budget
-
-	q := fmt.Sprintf(`SELECT id, tag_id, amount FROM budgets where id IN (%s)`,
-		toInCodition(tags))
-
-	rows, err := db.Query(q)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		b := waukeen.Budget{}
-		err = rows.Scan(&b.ID, &b.TagID, &b.Amount)
-		if err != nil {
-			return nil, err
-		}
-		budgets = append(budgets, b)
-	}
-	err = rows.Err()
-	return budgets, err
 }
 
 func toInCodition(args []string) string {

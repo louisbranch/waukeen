@@ -127,6 +127,13 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tags, err := srv.DB.AllTags()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, err)
+		return
+	}
+
 	var total int64
 	for _, t := range transactions {
 		total += t.Amount
@@ -145,11 +152,13 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 		Accounts     []waukeen.Account
 		Transactions []waukeen.Transaction
 		Total        int64
+		Budgets      []waukeen.Budget
 	}{
 		Form:         newAccountForm(opt),
 		Accounts:     accounts,
 		Transactions: transactions,
 		Total:        total,
+		Budgets:      srv.BudgetCalculator.Calculate(transactions, tags),
 	}
 
 	srv.render(w, content, "accounts")

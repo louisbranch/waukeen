@@ -13,6 +13,7 @@ type Server struct {
 	StatementsImporter waukeen.StatementsImporter
 	RulesImporter      waukeen.RulesImporter
 	Transformer        waukeen.TransactionTransformer
+	BudgetCalculator   waukeen.BudgetCalculator
 }
 
 func (srv *Server) NewServeMux() *http.ServeMux {

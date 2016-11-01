@@ -687,6 +687,31 @@ func TestCreateTag(t *testing.T) {
 	})
 }
 
+func TestAllTags(t *testing.T) {
+	db, path := testDB()
+	defer os.Remove(path)
+
+	t1 := waukeen.Tag{ID: "1", Name: "foo", Budget: 500}
+	t2 := waukeen.Tag{ID: "2", Name: "bar", Budget: 100}
+	t3 := waukeen.Tag{ID: "3", Name: "baz", Budget: 0}
+
+	for _, tag := range []waukeen.Tag{t1, t2, t3} {
+		err := db.CreateTag(&tag)
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+	}
+
+	want := []waukeen.Tag{t1, t2, t3}
+	got, err := db.AllTags()
+	if err != nil {
+		t.Errorf("wants no error, got %s", err)
+	}
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("wants %+v, got %+v", want, got)
+	}
+}
+
 func TestFindTags(t *testing.T) {
 	db, path := testDB()
 	defer os.Remove(path)

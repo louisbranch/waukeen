@@ -13,10 +13,29 @@ import (
 )
 
 func TestAccounts(t *testing.T) {
+	db := &mock.Database{}
+	budgeter := &mock.BudgetCalculator{}
+
+	db.FindAccountsMethod = func(ids ...string) ([]waukeen.Account, error) {
+		return nil, nil
+	}
+	db.FindTransactionsMethod = func(waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
+		return nil, nil
+	}
+	db.AllTagsMethod = func() ([]waukeen.Tag, error) {
+		return nil, nil
+	}
+
+	budgeter.CalculateMethod = func(trs []waukeen.Transaction,
+		tags []waukeen.Tag) []waukeen.Budget {
+		return nil
+	}
+
+	srv := &Server{DB: db, BudgetCalculator: budgeter}
+
 	t.Run("Invalid Method", func(t *testing.T) {
 		req := httptest.NewRequest("POST", "/accounts", nil)
 		res := serverTest(nil, req)
-
 		code := 405
 		if res.Code != code {
 			t.Errorf("wants %d status code, got %d", code, res.Code)
@@ -24,17 +43,8 @@ func TestAccounts(t *testing.T) {
 	})
 
 	t.Run("Empty accounts and transactions list", func(t *testing.T) {
-		db := &mock.Database{}
-		db.FindAccountsMethod = func(ids ...string) ([]waukeen.Account, error) {
-			return nil, nil
-		}
-		db.FindTransactionsMethod = func(waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
-			return nil, nil
-		}
-		srv := &Server{DB: db}
 		req := httptest.NewRequest("GET", "/accounts", nil)
 		res := serverTest(srv, req)
-
 		code := 200
 		if res.Code != code {
 			t.Errorf("wants %d status code, got %d", code, res.Code)
@@ -42,11 +52,9 @@ func TestAccounts(t *testing.T) {
 	})
 
 	t.Run("Find accounts DB error", func(t *testing.T) {
-		db := &mock.Database{}
 		db.FindAccountsMethod = func(ids ...string) ([]waukeen.Account, error) {
 			return nil, errors.New("not implemented")
 		}
-		srv := &Server{DB: db}
 		req := httptest.NewRequest("GET", "/accounts", nil)
 		res := serverTest(srv, req)
 
@@ -57,14 +65,9 @@ func TestAccounts(t *testing.T) {
 	})
 
 	t.Run("Find transactions DB error", func(t *testing.T) {
-		db := &mock.Database{}
-		db.FindAccountsMethod = func(ids ...string) ([]waukeen.Account, error) {
-			return []waukeen.Account{{Number: "12345"}}, nil
-		}
 		db.FindTransactionsMethod = func(waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
 			return nil, errors.New("not implemented")
 		}
-		srv := &Server{DB: db}
 		req := httptest.NewRequest("GET", "/accounts", nil)
 		res := serverTest(srv, req)
 
@@ -75,7 +78,6 @@ func TestAccounts(t *testing.T) {
 	})
 
 	t.Run("Empty Form", func(t *testing.T) {
-		db := &mock.Database{}
 		db.FindAccountsMethod = func(ids ...string) ([]waukeen.Account, error) {
 			return []waukeen.Account{{ID: "1"}}, nil
 		}
@@ -88,7 +90,6 @@ func TestAccounts(t *testing.T) {
 			*/
 			return nil, nil
 		}
-		srv := &Server{DB: db}
 		req := httptest.NewRequest("GET", "/accounts", nil)
 		res := serverTest(srv, req)
 
@@ -99,7 +100,6 @@ func TestAccounts(t *testing.T) {
 	})
 
 	t.Run("Invalid Form Values", func(t *testing.T) {
-		db := &mock.Database{}
 		db.FindAccountsMethod = func(ids ...string) ([]waukeen.Account, error) {
 			return []waukeen.Account{{ID: "1"}}, nil
 		}
@@ -112,7 +112,6 @@ func TestAccounts(t *testing.T) {
 			*/
 			return nil, nil
 		}
-		srv := &Server{DB: db}
 		req := httptest.NewRequest("GET", "/accounts", nil)
 		req.Form = url.Values{}
 		req.Form.Set("start", "20161024")
@@ -128,7 +127,6 @@ func TestAccounts(t *testing.T) {
 	})
 
 	t.Run("Valid Form Values", func(t *testing.T) {
-		db := &mock.Database{}
 		db.FindAccountsMethod = func(got ...string) ([]waukeen.Account, error) {
 			want := 0
 			if len(got) != 0 {
@@ -149,7 +147,6 @@ func TestAccounts(t *testing.T) {
 			}
 			return nil, nil
 		}
-		srv := &Server{DB: db}
 		req := httptest.NewRequest("GET", "/accounts", nil)
 		req.Form = url.Values{}
 		req.Form.Set("start", "2016-10")

@@ -38,6 +38,15 @@ func (m *TransactionTransformer) Transform(t *waukeen.Transaction, r waukeen.Rul
 	m.TransformMethod(t, r)
 }
 
+type BudgetCalculator struct {
+	CalculateMethod func([]waukeen.Transaction, []waukeen.Tag) []waukeen.Budget
+}
+
+func (m *BudgetCalculator) Calculate(trs []waukeen.Transaction,
+	tags []waukeen.Tag) []waukeen.Budget {
+	return m.CalculateMethod(trs, tags)
+}
+
 type Database struct {
 	CreateAccountMethod func(*waukeen.Account) error
 	UpdateAccountMethod func(*waukeen.Account) error
@@ -55,6 +64,7 @@ type Database struct {
 	DeleteRuleMethod func(string) error
 	FindRulesMethod  func(ids ...string) ([]waukeen.Rule, error)
 
+	AllTagsMethod   func() ([]waukeen.Tag, error)
 	CreateTagMethod func(*waukeen.Tag) error
 	DeleteTagMethod func(string) error
 	FindTagMethod   func(name string) (*waukeen.Tag, error)
@@ -117,6 +127,10 @@ func (m *Database) FindRules(ids ...string) ([]waukeen.Rule, error) {
 
 func (m *Database) CreateStatement(s waukeen.Statement, t waukeen.TransactionTransformer) error {
 	return m.CreateStatementMethod(s, t)
+}
+
+func (m *Database) AllTags() ([]waukeen.Tag, error) {
+	return m.AllTagsMethod()
 }
 
 func (m *Database) CreateTag(t *waukeen.Tag) error {

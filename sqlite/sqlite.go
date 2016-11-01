@@ -545,12 +545,14 @@ func (db *DB) FindTag(name string) (*waukeen.Tag, error) {
 	return t, nil
 }
 
-func (db *DB) FindTags(starts string) ([]waukeen.Tag, error) {
+func (db *DB) AllTags() ([]waukeen.Tag, error) {
+	return db.queryTags("SELECT id, name, budget FROM tags")
+}
+
+func (db *DB) queryTags(q string) ([]waukeen.Tag, error) {
 	var tags []waukeen.Tag
 
-	starts += "%"
-	rows, err := db.Query("SELECT id, name, budget FROM tags where name LIKE ?",
-		starts)
+	rows, err := db.Query(q)
 	if err != nil {
 		return nil, err
 	}
@@ -566,6 +568,13 @@ func (db *DB) FindTags(starts string) ([]waukeen.Tag, error) {
 	}
 	err = rows.Err()
 	return tags, err
+	return nil, nil
+}
+
+func (db *DB) FindTags(starts string) ([]waukeen.Tag, error) {
+	q := fmt.Sprintf("SELECT id, name, budget FROM tags where name LIKE '%s'",
+		starts+"%")
+	return db.queryTags(q)
 }
 
 func toInCodition(args []string) string {

@@ -56,6 +56,13 @@ type Tag struct {
 	Budget int64
 }
 
+type Budget struct {
+	Tag          string
+	Transactions int
+	Planned      int64
+	Spent        int64
+}
+
 type Rule struct {
 	ID     string
 	Type   RuleType
@@ -93,6 +100,7 @@ type Database interface {
 	DeleteRule(id string) error
 	FindRules(ids ...string) ([]Rule, error)
 
+	AllTags() ([]Tag, error)
 	CreateTag(*Tag) error
 	DeleteTag(id string) error
 	FindTag(name string) (*Tag, error)
@@ -113,6 +121,10 @@ type TransactionsDBOptions struct {
 
 type TransactionTransformer interface {
 	Transform(*Transaction, Rule)
+}
+
+type BudgetCalculator interface {
+	Calculate([]Transaction, []Tag) []Budget
 }
 
 type Template interface {

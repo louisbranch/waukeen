@@ -12,4 +12,5 @@ func TestMockSatisfiesInterfaces(t *testing.T) {
 	var _ waukeen.StatementsImporter = &StatementsImporter{}
 	var _ waukeen.TransactionTransformer = &TransactionTransformer{}
 	var _ waukeen.Database = &Database{}
+	var _ waukeen.BudgetCalculator = &BudgetCalculator{}
 }

@@ -21,7 +21,7 @@ func (srv *Server) tags(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		name := r.URL.Path[len("/tags/"):]
 		if name == "" {
-			tags, err := srv.DB.FindTags("")
+			tags, err := srv.DB.AllTags()
 
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)

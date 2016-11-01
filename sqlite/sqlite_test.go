@@ -5,12 +5,38 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/luizbranco/waukeen"
 	"github.com/luizbranco/waukeen/mock"
 )
+
+func TestDBInterface(t *testing.T) {
+	var _ waukeen.Database = &DB{}
+}
+
+func testAccount(db *DB) *waukeen.Account {
+	acc := &waukeen.Account{Number: "test"}
+	err := db.CreateAccount(acc)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return acc
+}
+
+var tagCounter = 0
+
+func testTag(db *DB) *waukeen.Tag {
+	tagCounter++
+	tag := &waukeen.Tag{Name: "test_" + strconv.Itoa(tagCounter)}
+	err := db.CreateTag(tag)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return tag
+}
 
 func testDB() (*DB, string) {
 	tmpfile, err := ioutil.TempFile("", "waukeen_db")
@@ -181,10 +207,12 @@ func TestCreateTransaction(t *testing.T) {
 	db, path := testDB()
 	defer os.Remove(path)
 
+	acc := testAccount(db)
+
 	t.Run("Valid Transaction", func(t *testing.T) {
 		tr := &waukeen.Transaction{
 			ID:          "1",
-			AccountID:   "1",
+			AccountID:   acc.ID,
 			FITID:       "12345",
 			Type:        waukeen.Debit,
 			Title:       "First Transaction",
@@ -223,9 +251,11 @@ func TestFindTransaction(t *testing.T) {
 	db, path := testDB()
 	defer os.Remove(path)
 
+	acc := testAccount(db)
+
 	t.Run("Valid Transaction", func(t *testing.T) {
 		tr := &waukeen.Transaction{
-			AccountID:   "1",
+			AccountID:   acc.ID,
 			FITID:       "12345",
 			Type:        waukeen.Debit,
 			Title:       "First Transaction",
@@ -264,9 +294,11 @@ func TestUpdateTransaction(t *testing.T) {
 	db, path := testDB()
 	defer os.Remove(path)
 
+	acc := testAccount(db)
+
 	tr := &waukeen.Transaction{
 		ID:          "1",
-		AccountID:   "1",
+		AccountID:   acc.ID,
 		FITID:       "12345",
 		Type:        waukeen.Debit,
 		Title:       "First Transaction",
@@ -318,10 +350,9 @@ func TestCreateRule(t *testing.T) {
 
 	t.Run("Valid Rule", func(t *testing.T) {
 		r := &waukeen.Rule{
-			AccountID: "1",
-			Type:      waukeen.TagRule,
-			Match:     "dominos",
-			Result:    "pizza",
+			Type:   waukeen.TagRule,
+			Match:  "dominos",
+			Result: "pizza",
 		}
 		err := db.CreateRule(r)
 
@@ -349,10 +380,9 @@ func TestDeleteRule(t *testing.T) {
 	defer os.Remove(path)
 
 	r := &waukeen.Rule{
-		AccountID: "1",
-		Type:      waukeen.TagRule,
-		Match:     "dominos",
-		Result:    "pizza",
+		Type:   waukeen.TagRule,
+		Match:  "dominos",
+		Result: "pizza",
 	}
 	err := db.CreateRule(r)
 
@@ -378,9 +408,12 @@ func TestFindTransactions(t *testing.T) {
 	db, path := testDB()
 	defer os.Remove(path)
 
+	acc1 := testAccount(db)
+	acc2 := testAccount(db)
+
 	tr1 := waukeen.Transaction{
 		ID:        "1",
-		AccountID: "1",
+		AccountID: acc1.ID,
 		FITID:     "01",
 		Type:      waukeen.Debit,
 		Title:     "1st",
@@ -389,7 +422,7 @@ func TestFindTransactions(t *testing.T) {
 	}
 	tr2 := waukeen.Transaction{
 		ID:        "2",
-		AccountID: "1",
+		AccountID: acc1.ID,
 		FITID:     "02",
 		Type:      waukeen.Credit,
 		Title:     "2nd",
@@ -397,7 +430,7 @@ func TestFindTransactions(t *testing.T) {
 	}
 	tr3 := waukeen.Transaction{
 		ID:        "3",
-		AccountID: "2",
+		AccountID: acc2.ID,
 		FITID:     "03",
 		Type:      waukeen.Debit,
 		Title:     "3rd",
@@ -406,7 +439,7 @@ func TestFindTransactions(t *testing.T) {
 	}
 	tr4 := waukeen.Transaction{
 		ID:        "4",
-		AccountID: "2",
+		AccountID: acc2.ID,
 		FITID:     "04",
 		Type:      waukeen.Credit,
 		Title:     "4th",
@@ -518,19 +551,17 @@ func TestFindRules(t *testing.T) {
 	defer os.Remove(path)
 
 	r1 := waukeen.Rule{
-		AccountID: "1",
-		ID:        "1",
-		Type:      waukeen.TagRule,
-		Match:     "dominos",
-		Result:    "pizza",
+		ID:     "1",
+		Type:   waukeen.TagRule,
+		Match:  "dominos",
+		Result: "pizza",
 	}
 
 	r2 := waukeen.Rule{
-		AccountID: "",
-		ID:        "2",
-		Type:      waukeen.TagRule,
-		Match:     "dominos",
-		Result:    "pizza",
+		ID:     "2",
+		Type:   waukeen.TagRule,
+		Match:  "dominos",
+		Result: "pizza",
 	}
 
 	for _, r := range []waukeen.Rule{r1, r2} {
@@ -541,7 +572,7 @@ func TestFindRules(t *testing.T) {
 	}
 
 	want := []waukeen.Rule{r1, r2}
-	got, err := db.FindRules("1")
+	got, err := db.FindRules()
 	if err != nil {
 		t.Errorf("wants no error, got %s", err)
 	}
@@ -697,6 +728,81 @@ func TestFindTags(t *testing.T) {
 	t.Run("Multiple Matches", func(t *testing.T) {
 		want := []waukeen.Tag{t2, t3}
 		got, err := db.FindTags("ba")
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+		if !reflect.DeepEqual(want, got) {
+			t.Errorf("wants %+v, got %+v", want, got)
+		}
+	})
+}
+
+func TestCreateBudget(t *testing.T) {
+	db, path := testDB()
+	defer os.Remove(path)
+
+	tag := testTag(db)
+
+	t.Run("Invalid Budget", func(t *testing.T) {
+		budget := &waukeen.Budget{}
+		err := db.CreateBudget(budget)
+		if err == nil {
+			t.Errorf("wants error, got none")
+		}
+	})
+
+	t.Run("Valid Budget", func(t *testing.T) {
+		budget := &waukeen.Budget{TagID: tag.ID}
+		err := db.CreateBudget(budget)
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+		if budget.ID != "1" {
+			t.Errorf("wants budget id %s, got %s", "1", budget.ID)
+		}
+	})
+
+	t.Run("Duplicated Budget", func(t *testing.T) {
+		budget := &waukeen.Budget{TagID: tag.ID}
+		err := db.CreateBudget(budget)
+		if err == nil {
+			t.Errorf("wants error, got none")
+		}
+	})
+}
+
+func TestFindBudgets(t *testing.T) {
+	db, path := testDB()
+	defer os.Remove(path)
+
+	tag1 := testTag(db)
+	tag2 := testTag(db)
+	tag3 := testTag(db)
+
+	b1 := waukeen.Budget{ID: "1", TagID: tag1.ID, Amount: 100}
+	b2 := waukeen.Budget{ID: "2", TagID: tag2.ID, Amount: 500}
+	b3 := waukeen.Budget{ID: "3", TagID: tag3.ID, Amount: 900}
+
+	for _, budget := range []waukeen.Budget{b1, b2, b3} {
+		err := db.CreateBudget(&budget)
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+	}
+
+	t.Run("No Match", func(t *testing.T) {
+		budgets, err := db.FindBudgets("0")
+		if err != nil {
+			t.Errorf("wants no error, got %s", err)
+		}
+		if len(budgets) != 0 {
+			t.Errorf("wants no budgets, got %+v", budgets)
+		}
+	})
+
+	t.Run("Multiple Matches", func(t *testing.T) {
+		want := []waukeen.Budget{b2, b3}
+		got, err := db.FindBudgets(tag2.ID, tag3.ID)
 		if err != nil {
 			t.Errorf("wants no error, got %s", err)
 		}

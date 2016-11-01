@@ -10,15 +10,25 @@ import (
 	"time"
 
 	"github.com/luizbranco/waukeen"
-	_ "github.com/mattn/go-sqlite3"
+	sqlite3 "github.com/mattn/go-sqlite3"
 )
 
 type DB struct {
 	*sql.DB
 }
 
+func init() {
+	sql.Register("sqlite3_with_fk",
+		&sqlite3.SQLiteDriver{
+			ConnectHook: func(conn *sqlite3.SQLiteConn) error {
+				_, err := conn.Exec("PRAGMA foreign_keys = ON", nil)
+				return err
+			},
+		})
+}
+
 func New(path string) (*DB, error) {
-	db, err := sql.Open("sqlite3", path)
+	db, err := sql.Open("sqlite3_with_fk", path)
 	if err != nil {
 		return nil, err
 	}
@@ -74,19 +84,18 @@ func New(path string) (*DB, error) {
 		`
 		CREATE TABLE IF NOT EXISTS budgets(
 			id INTEGER PRIMARY KEY,
-			tag_id INTEGER NOT NULL,
+			tag_id INTEGER NOT NULL UNIQUE,
 			period INTEGER NOT NULL,
+			amount INTEGER,
 			FOREIGN KEY(tag_id) REFERENCES tags(id) ON DELETE CASCADE
 		);
 		`,
 		`
 		CREATE TABLE IF NOT EXISTS rules(
 			id INTEGER PRIMARY KEY,
-			account_id INTEGER,
 			type INTEGER NOT NULL,
 			match TEXT NOT NULL CHECK(match <> ''),
-			result TEXT NOT NULL,
-			FOREIGN KEY(account_id) REFERENCES accounts(id) ON DELETE CASCADE
+			result TEXT NOT NULL
 		);
 		`,
 	}
@@ -397,10 +406,9 @@ func (db *DB) findTags(transaction string) ([]string, error) {
 }
 
 func (db *DB) CreateRule(r *waukeen.Rule) error {
-	q := `INSERT into rules (account_id, type, match, result) values
-		(?, ?, ?, ?);`
+	q := "INSERT into rules (type, match, result) values (?, ?, ?)"
 
-	res, err := db.Exec(q, r.AccountID, r.Type, r.Match, r.Result)
+	res, err := db.Exec(q, r.Type, r.Match, r.Result)
 
 	if err != nil {
 		return fmt.Errorf("error creating rule: %s", err)
@@ -417,13 +425,18 @@ func (db *DB) CreateRule(r *waukeen.Rule) error {
 	return nil
 }
 
-func (db *DB) FindRules(acc string) ([]waukeen.Rule, error) {
+func (db *DB) FindRules(ids ...string) ([]waukeen.Rule, error) {
 	var rules []waukeen.Rule
+	var query string
 
-	stmt := `SELECT id, account_id, type, match, result from rules
-	where account_id = ? OR account_id = ''`
+	if len(ids) == 0 {
+		query = "SELECT id, type, match, result FROM rules"
+	} else {
+		query = fmt.Sprintf(`SELECT id, type, match, result FROM rules where id IN
+		(%s)`, toInCodition(ids))
+	}
 
-	rows, err := db.Query(stmt, acc)
+	rows, err := db.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -431,7 +444,7 @@ func (db *DB) FindRules(acc string) ([]waukeen.Rule, error) {
 
 	for rows.Next() {
 		r := waukeen.Rule{}
-		err = rows.Scan(&r.ID, &r.AccountID, &r.Type, &r.Match, &r.Result)
+		err = rows.Scan(&r.ID, &r.Type, &r.Match, &r.Result)
 		if err != nil {
 			return nil, err
 		}
@@ -471,7 +484,7 @@ func (db *DB) CreateStatement(stmt waukeen.Statement,
 		return err
 	}
 
-	rules, err := db.FindRules(acc.ID)
+	rules, err := db.FindRules()
 
 	if err != nil {
 		return err
@@ -560,6 +573,68 @@ func (db *DB) FindTags(starts string) ([]waukeen.Tag, error) {
 	}
 	err = rows.Err()
 	return tags, err
+}
+
+func (db *DB) CreateBudget(b *waukeen.Budget) error {
+	q := `INSERT into budgets (tag_id, period, amount) values (?, ?, ?)`
+
+	res, err := db.Exec(q, b.TagID, b.Period, b.Amount)
+
+	if err != nil {
+		return fmt.Errorf("error creating budget: %s", err)
+	}
+
+	id, err := res.LastInsertId()
+
+	if err != nil {
+		return fmt.Errorf("error retrieving last budget id: %s", err)
+	}
+
+	b.ID = strconv.FormatInt(id, 10)
+
+	return nil
+}
+
+func (db *DB) DeleteBudget(id string) error {
+	return errors.New("not implemented")
+}
+
+func (db *DB) FindBudget(id string) (*waukeen.Budget, error) {
+	q := "SELECT id, tag_id, period, amount FROM budgets where id = ?"
+
+	b := &waukeen.Budget{}
+
+	err := db.QueryRow(q, id).Scan(&b.ID, &b.TagID, &b.Period, &b.Amount)
+
+	if err != nil {
+		return nil, fmt.Errorf("error finding budget: %s", err)
+	}
+
+	return b, nil
+}
+
+func (db *DB) FindBudgets(tags ...string) ([]waukeen.Budget, error) {
+	var budgets []waukeen.Budget
+
+	q := fmt.Sprintf(`SELECT id, tag_id, period, amount FROM budgets where id IN (%s)`,
+		toInCodition(tags))
+
+	rows, err := db.Query(q)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		b := waukeen.Budget{}
+		err = rows.Scan(&b.ID, &b.TagID, &b.Period, &b.Amount)
+		if err != nil {
+			return nil, err
+		}
+		budgets = append(budgets, b)
+	}
+	err = rows.Err()
+	return budgets, err
 }
 
 func toInCodition(args []string) string {

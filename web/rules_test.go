@@ -48,7 +48,7 @@ func TestRules(t *testing.T) {
 
 	t.Run("Get rules DB error", func(t *testing.T) {
 		db := &mock.Database{}
-		db.FindRulesMethod = func(string) ([]waukeen.Rule, error) {
+		db.FindRulesMethod = func(...string) ([]waukeen.Rule, error) {
 			return nil, errors.New("not implemented")
 		}
 		srv := &Server{DB: db}
@@ -64,7 +64,7 @@ func TestRules(t *testing.T) {
 
 	t.Run("Get rules", func(t *testing.T) {
 		db := &mock.Database{}
-		db.FindRulesMethod = func(string) ([]waukeen.Rule, error) {
+		db.FindRulesMethod = func(...string) ([]waukeen.Rule, error) {
 			return nil, nil
 		}
 		srv := &Server{DB: db}
@@ -112,10 +112,9 @@ func TestRules(t *testing.T) {
 
 	t.Run("Post new rule valid rule", func(t *testing.T) {
 		rule := &waukeen.Rule{
-			Type:      waukeen.TagRule,
-			AccountID: "12345",
-			Match:     "dominos",
-			Result:    "pizza",
+			Type:   waukeen.TagRule,
+			Match:  "dominos",
+			Result: "pizza",
 		}
 
 		db := &mock.Database{}
@@ -130,7 +129,6 @@ func TestRules(t *testing.T) {
 		req := httptest.NewRequest("POST", "/rules", nil)
 		req.Form = url.Values{}
 		req.Form.Set("type", strconv.Itoa(int(rule.Type)))
-		req.Form.Set("account", rule.AccountID)
 		req.Form.Set("match", rule.Match)
 		req.Form.Set("result", rule.Result)
 
@@ -209,10 +207,9 @@ func TestImportRules(t *testing.T) {
 
 	t.Run("Post valid rules", func(t *testing.T) {
 		rule := &waukeen.Rule{
-			Type:      waukeen.TagRule,
-			AccountID: "12345",
-			Match:     "dominos",
-			Result:    "pizza",
+			Type:   waukeen.TagRule,
+			Match:  "dominos",
+			Result: "pizza",
 		}
 		importer := &mock.RulesImporter{}
 		importer.ImportMethod = func(io.Reader) ([]waukeen.Rule, error) {

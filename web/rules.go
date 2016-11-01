@@ -38,10 +38,9 @@ func (srv *Server) rules(w http.ResponseWriter, r *http.Request) {
 		}
 
 		rule := &waukeen.Rule{
-			AccountID: r.FormValue("account"),
-			Type:      waukeen.RuleType(n),
-			Match:     r.FormValue("match"),
-			Result:    r.FormValue("result"),
+			Type:   waukeen.RuleType(n),
+			Match:  r.FormValue("match"),
+			Result: r.FormValue("result"),
 		}
 
 		err = srv.DB.CreateRule(rule)

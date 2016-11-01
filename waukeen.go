@@ -15,13 +15,19 @@ const (
 	Checking
 	Savings
 	CreditCard
+)
 
+const (
 	OtherTransaction TransactionType = iota
 	Credit
 	Debit
+)
 
+const (
 	Monthly BudgetPeriod = iota
+)
 
+const (
 	UnknownRule RuleType = iota
 	ReplaceRule
 	TagRule
@@ -55,14 +61,14 @@ type Tag struct {
 }
 
 type Rule struct {
-	ID        string
-	AccountID string
-	Type      RuleType
-	Match     string
-	Result    string
+	ID     string
+	Type   RuleType
+	Match  string
+	Result string
 }
 
 type Budget struct {
+	ID     string
 	TagID  string
 	Period BudgetPeriod
 	Amount int64
@@ -96,12 +102,17 @@ type Database interface {
 
 	CreateRule(*Rule) error
 	DeleteRule(id string) error
-	FindRules(acc string) ([]Rule, error)
+	FindRules(ids ...string) ([]Rule, error)
 
 	CreateTag(*Tag) error
 	DeleteTag(id string) error
 	FindTag(name string) (*Tag, error)
 	FindTags(starts string) ([]Tag, error)
+
+	CreateBudget(*Budget) error
+	DeleteBudget(id string) error
+	FindBudget(id string) (*Budget, error)
+	FindBudgets(tags ...string) ([]Budget, error)
 
 	CreateStatement(Statement, TransactionTransformer) error
 }

@@ -53,12 +53,17 @@ type Database struct {
 
 	CreateRuleMethod func(*waukeen.Rule) error
 	DeleteRuleMethod func(string) error
-	FindRulesMethod  func(acc string) ([]waukeen.Rule, error)
+	FindRulesMethod  func(ids ...string) ([]waukeen.Rule, error)
 
 	CreateTagMethod func(*waukeen.Tag) error
 	DeleteTagMethod func(string) error
 	FindTagMethod   func(name string) (*waukeen.Tag, error)
 	FindTagsMethod  func(starts string) ([]waukeen.Tag, error)
+
+	CreateBudgetMethod func(*waukeen.Budget) error
+	DeleteBudgetMethod func(id string) error
+	FindBudgetMethod   func(id string) (*waukeen.Budget, error)
+	FindBudgetsMethod  func(tags ...string) ([]waukeen.Budget, error)
 
 	CreateStatementMethod func(waukeen.Statement, waukeen.TransactionTransformer) error
 }
@@ -111,8 +116,8 @@ func (m *Database) DeleteRule(id string) error {
 	return m.DeleteRuleMethod(id)
 }
 
-func (m *Database) FindRules(acc string) ([]waukeen.Rule, error) {
-	return m.FindRulesMethod(acc)
+func (m *Database) FindRules(ids ...string) ([]waukeen.Rule, error) {
+	return m.FindRulesMethod(ids...)
 }
 
 func (m *Database) CreateStatement(s waukeen.Statement, t waukeen.TransactionTransformer) error {
@@ -133,4 +138,20 @@ func (m *Database) FindTags(starts string) ([]waukeen.Tag, error) {
 
 func (m *Database) DeleteTag(id string) error {
 	return m.DeleteTagMethod(id)
+}
+
+func (m *Database) CreateBudget(b *waukeen.Budget) error {
+	return m.CreateBudgetMethod(b)
+}
+
+func (m *Database) FindBudget(id string) (*waukeen.Budget, error) {
+	return m.FindBudgetMethod(id)
+}
+
+func (m *Database) FindBudgets(tags ...string) ([]waukeen.Budget, error) {
+	return m.FindBudgetsMethod(tags...)
+}
+
+func (m *Database) DeleteBudget(id string) error {
+	return m.DeleteBudgetMethod(id)
 }

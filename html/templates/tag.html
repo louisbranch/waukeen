@@ -6,6 +6,7 @@
     <title>{{ if .ID }}Edit {{ else }} New {{ end }} Tag</title>
   </head>
   <body>
+    <h1>{{ if .ID }}Edit {{ else }} New {{ end }} Tag</h1>
     <form action="/tags/" method="post">
       <input type="hidden" name="id" value="{{ .ID }}" />
       <div>
@@ -14,7 +15,7 @@
       </div>
       <div>
         <label for="budget">Monthly Budget</label>
-        <input type="text" name="monthly_budget" value='{{ .Monthly Budget }}' />
+        <input type="text" name="monthly_budget" value='{{ .MonthlyBudget }}' />
       </div>
       <div>
         <input type="submit" value="Save" />

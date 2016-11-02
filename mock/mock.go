@@ -66,6 +66,7 @@ type Database struct {
 
 	AllTagsMethod   func() ([]waukeen.Tag, error)
 	CreateTagMethod func(*waukeen.Tag) error
+	UpdateTagMethod func(*waukeen.Tag) error
 	DeleteTagMethod func(string) error
 	FindTagMethod   func(name string) (*waukeen.Tag, error)
 	FindTagsMethod  func(starts string) ([]waukeen.Tag, error)
@@ -135,6 +136,10 @@ func (m *Database) AllTags() ([]waukeen.Tag, error) {
 
 func (m *Database) CreateTag(t *waukeen.Tag) error {
 	return m.CreateTagMethod(t)
+}
+
+func (m *Database) UpdateTag(t *waukeen.Tag) error {
+	return m.UpdateTagMethod(t)
 }
 
 func (m *Database) FindTag(name string) (*waukeen.Tag, error) {

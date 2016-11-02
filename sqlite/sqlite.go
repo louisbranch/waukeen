@@ -527,6 +527,12 @@ func (db *DB) CreateTag(t *waukeen.Tag) error {
 	return nil
 }
 
+func (db *DB) UpdateTag(t *waukeen.Tag) error {
+	_, err := db.Exec("UPDATE tags SET name=?, monthly_budget=? where id = ?",
+		t.Name, t.MonthlyBudget, t.ID)
+	return err
+}
+
 func (db *DB) DeleteTag(id string) error {
 	return errors.New("not implemented")
 }

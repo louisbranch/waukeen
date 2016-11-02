@@ -9,7 +9,7 @@ import (
 )
 
 func TestRulesImport(t *testing.T) {
-	importer := &Rules{}
+	importer := Rules{}
 
 	t.Run("Invalid JSON", func(t *testing.T) {
 		in := strings.NewReader(``)

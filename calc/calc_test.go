@@ -8,11 +8,11 @@ import (
 )
 
 func TestBudgetCalculatorInterface(t *testing.T) {
-	var _ waukeen.BudgetCalculator = &Budgeter{}
+	var _ waukeen.BudgetCalculator = Budgeter{}
 }
 
 func TestCalculate(t *testing.T) {
-	b := &Budgeter{}
+	b := Budgeter{}
 
 	testCases := []struct {
 		months       int

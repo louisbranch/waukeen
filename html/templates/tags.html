@@ -10,7 +10,7 @@
       <thead>
         <tr>
           <th>Name</th>
-          <th>Budget</th>
+          <th>Monthly Budget</th>
           <th></th>
         </tr>
       </thead>
@@ -18,7 +18,7 @@
         {{ range . }}
           <tr>
             <td>{{.Name}}</td>
-            <td>{{currency .Budget}}</td>
+            <td>{{currency .MonthlyBudget}}</td>
             <td><a href="/tags/{{.Name}}">Edit</a></td>
           </tr>
         {{ end }}

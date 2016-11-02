@@ -10,7 +10,7 @@ import (
 )
 
 func TestStatementsImport(t *testing.T) {
-	importer := &Statement{}
+	importer := Statement{}
 
 	t.Run("Invalid XML", func(t *testing.T) {
 		in := strings.NewReader(``)

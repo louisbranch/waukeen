@@ -9,7 +9,7 @@ import (
 
 type Rules struct{}
 
-func (*Rules) Import(in io.Reader) ([]waukeen.Rule, error) {
+func (Rules) Import(in io.Reader) ([]waukeen.Rule, error) {
 	var rules []waukeen.Rule
 	dec := json.NewDecoder(in)
 	err := dec.Decode(&rules)

@@ -48,19 +48,26 @@ func (srv *Server) tags(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		id := r.FormValue("id")
+
 		tag := &waukeen.Tag{
+			ID:            id,
 			Name:          r.FormValue("name"),
 			MonthlyBudget: n,
 		}
 
-		err = srv.DB.CreateTag(tag)
+		if id != "" {
+			err = srv.DB.UpdateTag(tag)
+		} else {
+			err = srv.DB.CreateTag(tag)
+		}
 
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		http.Redirect(w, r, "/tags", http.StatusFound)
+		http.Redirect(w, r, "/tags/", http.StatusFound)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}

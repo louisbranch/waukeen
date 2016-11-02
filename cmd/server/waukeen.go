@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/luizbranco/waukeen/calc"
 	"github.com/luizbranco/waukeen/html"
 	"github.com/luizbranco/waukeen/json"
 	"github.com/luizbranco/waukeen/sqlite"
@@ -23,9 +24,10 @@ func main() {
 	srv := &web.Server{
 		DB:                 db,
 		Template:           html.New("html/templates"),
-		StatementsImporter: &xml.Statement{},
-		RulesImporter:      &json.Rules{},
+		StatementsImporter: xml.Statement{},
+		RulesImporter:      json.Rules{},
 		Transformer:        transformer.Text{},
+		BudgetCalculator:   calc.Budgeter{},
 	}
 	mux := srv.NewServeMux()
 

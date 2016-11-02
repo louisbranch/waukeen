@@ -102,6 +102,7 @@ type Database interface {
 
 	AllTags() ([]Tag, error)
 	CreateTag(*Tag) error
+	UpdateTag(*Tag) error
 	DeleteTag(id string) error
 	FindTag(name string) (*Tag, error)
 	FindTags(starts string) ([]Tag, error)

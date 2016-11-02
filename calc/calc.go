@@ -9,7 +9,7 @@ import (
 
 type Budgeter struct{}
 
-func (*Budgeter) Calculate(months int, trs []waukeen.Transaction,
+func (Budgeter) Calculate(months int, trs []waukeen.Transaction,
 	tags []waukeen.Tag) []waukeen.Budget {
 
 	var budget []waukeen.Budget
@@ -41,7 +41,15 @@ func (*Budgeter) Calculate(months int, trs []waukeen.Transaction,
 	}
 
 	slice.Sort(budget, func(i, j int) bool {
-		return strings.Compare(budget[i].Tag, budget[j].Tag) < 0
+		t1 := budget[i].Tag
+		t2 := budget[j].Tag
+		if t1 == "other" {
+			return false
+		}
+		if t2 == "other" {
+			return true
+		}
+		return strings.Compare(t1, t2) < 0
 	})
 
 	return budget

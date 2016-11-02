@@ -9,7 +9,7 @@ import (
 
 type Statement struct{}
 
-func (*Statement) Import(in io.Reader) ([]waukeen.Statement, error) {
+func (Statement) Import(in io.Reader) ([]waukeen.Statement, error) {
 	result, err := ofx.Parse(in)
 
 	if err != nil {

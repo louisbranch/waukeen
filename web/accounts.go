@@ -147,6 +147,9 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 
 	opt.Accounts = ids
 
+	months := monthSpam(opt)
+	budgets := srv.BudgetCalculator.Calculate(months, transactions, tags)
+
 	content := struct {
 		Form         accountForm
 		Accounts     []waukeen.Account
@@ -158,8 +161,14 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 		Accounts:     accounts,
 		Transactions: transactions,
 		Total:        total,
-		Budgets:      srv.BudgetCalculator.Calculate(transactions, tags),
+		Budgets:      budgets,
 	}
 
 	srv.render(w, content, "accounts")
+}
+
+func monthSpam(opt waukeen.TransactionsDBOptions) int {
+	years := opt.End.Year() - opt.Start.Year()
+	months := (int(opt.End.Month()) + (years * 12)) - int(opt.Start.Month())
+	return months + 1
 }

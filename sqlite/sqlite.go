@@ -66,7 +66,7 @@ func New(path string) (*DB, error) {
 		CREATE TABLE IF NOT EXISTS tags(
 			id INTEGER PRIMARY KEY,
 			name TEXT NOT NULL UNIQUE CHECK(name <> ''),
-			budget INTEGER
+			monthly_budget INTEGER
 		);
 		`,
 		`
@@ -508,9 +508,9 @@ func (db *DB) CreateStatement(stmt waukeen.Statement,
 }
 
 func (db *DB) CreateTag(t *waukeen.Tag) error {
-	q := `INSERT into tags (name, budget) values (?, ?)`
+	q := `INSERT into tags (name, monthly_budget) values (?, ?)`
 
-	res, err := db.Exec(q, t.Name, t.Budget)
+	res, err := db.Exec(q, t.Name, t.MonthlyBudget)
 
 	if err != nil {
 		return fmt.Errorf("error creating tag: %s", err)
@@ -532,11 +532,11 @@ func (db *DB) DeleteTag(id string) error {
 }
 
 func (db *DB) FindTag(name string) (*waukeen.Tag, error) {
-	q := "SELECT id, name, budget FROM tags where name = ?"
+	q := "SELECT id, name, monthly_budget FROM tags where name = ?"
 
 	t := &waukeen.Tag{}
 
-	err := db.QueryRow(q, name).Scan(&t.ID, &t.Name, &t.Budget)
+	err := db.QueryRow(q, name).Scan(&t.ID, &t.Name, &t.MonthlyBudget)
 
 	if err != nil {
 		return nil, fmt.Errorf("error finding tag: %s", err)
@@ -546,7 +546,7 @@ func (db *DB) FindTag(name string) (*waukeen.Tag, error) {
 }
 
 func (db *DB) AllTags() ([]waukeen.Tag, error) {
-	return db.queryTags("SELECT id, name, budget FROM tags")
+	return db.queryTags("SELECT id, name, monthly_budget FROM tags")
 }
 
 func (db *DB) queryTags(q string) ([]waukeen.Tag, error) {
@@ -560,7 +560,7 @@ func (db *DB) queryTags(q string) ([]waukeen.Tag, error) {
 
 	for rows.Next() {
 		t := waukeen.Tag{}
-		err = rows.Scan(&t.ID, &t.Name, &t.Budget)
+		err = rows.Scan(&t.ID, &t.Name, &t.MonthlyBudget)
 		if err != nil {
 			return nil, err
 		}
@@ -572,7 +572,7 @@ func (db *DB) queryTags(q string) ([]waukeen.Tag, error) {
 }
 
 func (db *DB) FindTags(starts string) ([]waukeen.Tag, error) {
-	q := fmt.Sprintf("SELECT id, name, budget FROM tags where name LIKE '%s'",
+	q := fmt.Sprintf("SELECT id, name, monthly_budget FROM tags where name LIKE '%s'",
 		starts+"%")
 	return db.queryTags(q)
 }

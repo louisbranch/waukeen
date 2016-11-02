@@ -40,7 +40,7 @@ func (srv *Server) tags(w http.ResponseWriter, r *http.Request) {
 		}
 		srv.render(w, t, "tag")
 	case "POST":
-		b := r.FormValue("budget")
+		b := r.FormValue("monthly_budget")
 		n, err := strconv.ParseInt(b, 10, 64)
 
 		if err != nil {
@@ -49,8 +49,8 @@ func (srv *Server) tags(w http.ResponseWriter, r *http.Request) {
 		}
 
 		tag := &waukeen.Tag{
-			Name:   r.FormValue("name"),
-			Budget: n,
+			Name:          r.FormValue("name"),
+			MonthlyBudget: n,
 		}
 
 		err = srv.DB.CreateTag(tag)

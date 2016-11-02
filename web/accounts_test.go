@@ -26,7 +26,7 @@ func TestAccounts(t *testing.T) {
 		return nil, nil
 	}
 
-	budgeter.CalculateMethod = func(trs []waukeen.Transaction,
+	budgeter.CalculateMethod = func(months int, trs []waukeen.Transaction,
 		tags []waukeen.Tag) []waukeen.Budget {
 		return nil
 	}
@@ -161,4 +161,45 @@ func TestAccounts(t *testing.T) {
 			t.Errorf("wants %d status code, got %d", code, res.Code)
 		}
 	})
+}
+
+func TestMonthSpam(t *testing.T) {
+	testCases := []struct {
+		start  time.Time
+		end    time.Time
+		months int
+	}{
+		{
+			start:  time.Date(2016, 9, 30, 0, 0, 0, 0, time.UTC),
+			end:    time.Date(2016, 10, 31, 0, 0, 0, 0, time.UTC),
+			months: 2,
+		},
+		{
+			start:  time.Date(2016, 10, 01, 0, 0, 0, 0, time.UTC),
+			end:    time.Date(2016, 10, 31, 0, 0, 0, 0, time.UTC),
+			months: 1,
+		},
+		{
+			start:  time.Date(2016, 10, 01, 0, 0, 0, 0, time.UTC),
+			end:    time.Date(2017, 4, 10, 0, 0, 0, 0, time.UTC),
+			months: 7,
+		},
+		{
+			start:  time.Date(2016, 10, 01, 0, 0, 0, 0, time.UTC),
+			end:    time.Date(2017, 9, 10, 0, 0, 0, 0, time.UTC),
+			months: 12,
+		},
+	}
+
+	for _, tc := range testCases {
+		got := monthSpam(waukeen.TransactionsDBOptions{
+			Start: tc.start,
+			End:   tc.end,
+		})
+		want := tc.months
+		if want != got {
+			t.Errorf("wants %d months, got %d", want, got)
+		}
+	}
+
 }

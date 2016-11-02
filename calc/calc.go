@@ -9,31 +9,30 @@ import (
 
 type Budgeter struct{}
 
-func (*Budgeter) Calculate(trs []waukeen.Transaction, tags []waukeen.Tag) []waukeen.Budget {
+func (*Budgeter) Calculate(months int, trs []waukeen.Transaction,
+	tags []waukeen.Tag) []waukeen.Budget {
 
 	var budget []waukeen.Budget
 
 	m := make(map[string]waukeen.Budget)
 
 	for _, tr := range trs {
+		if len(tr.Tags) == 0 {
+			tr.Tags = []string{"other"}
+		}
+
 		for _, tag := range tr.Tags {
-			b, ok := m[tag]
-			if ok {
-				b.Transactions += 1
-				b.Spent += tr.Amount
-			} else {
-				b = waukeen.Budget{Tag: tag, Transactions: 1, Spent: tr.Amount}
-			}
+			b := m[tag]
+			b.Transactions++
+			b.Spent += (tr.Amount * -1)
+			b.Tag = tag
 			m[tag] = b
 		}
 	}
 
 	for _, t := range tags {
-		b, ok := m[t.Name]
-		if !ok {
-			continue
-		}
-		b.Planned = t.Budget
+		b := m[t.Name]
+		b.Planned = t.MonthlyBudget * int64(months)
 		m[t.Name] = b
 	}
 

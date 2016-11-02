@@ -51,9 +51,9 @@ type Transaction struct {
 }
 
 type Tag struct {
-	ID     string
-	Name   string
-	Budget int64
+	ID            string
+	Name          string
+	MonthlyBudget int64
 }
 
 type Budget struct {
@@ -124,7 +124,7 @@ type TransactionTransformer interface {
 }
 
 type BudgetCalculator interface {
-	Calculate([]Transaction, []Tag) []Budget
+	Calculate(Months int, trs []Transaction, tags []Tag) []Budget
 }
 
 type Template interface {

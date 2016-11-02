@@ -39,12 +39,12 @@ func (m *TransactionTransformer) Transform(t *waukeen.Transaction, r waukeen.Rul
 }
 
 type BudgetCalculator struct {
-	CalculateMethod func([]waukeen.Transaction, []waukeen.Tag) []waukeen.Budget
+	CalculateMethod func(int, []waukeen.Transaction, []waukeen.Tag) []waukeen.Budget
 }
 
-func (m *BudgetCalculator) Calculate(trs []waukeen.Transaction,
+func (m *BudgetCalculator) Calculate(months int, trs []waukeen.Transaction,
 	tags []waukeen.Tag) []waukeen.Budget {
-	return m.CalculateMethod(trs, tags)
+	return m.CalculateMethod(months, trs, tags)
 }
 
 type Database struct {

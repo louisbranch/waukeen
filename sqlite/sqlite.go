@@ -133,7 +133,7 @@ func (db *DB) FindAccounts(ids ...string) ([]waukeen.Account, error) {
 	var query string
 
 	if len(ids) == 0 {
-		query = "SELECT id, number, name type, currency, balance FROM accounts"
+		query = "SELECT id, number, name, type, currency, balance FROM accounts"
 	} else {
 		query = fmt.Sprintf(`SELECT id, number, name, type, currency, balance FROM
 		accounts where id IN (%s)`, toInCodition(ids))

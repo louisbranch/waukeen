@@ -85,7 +85,7 @@ func TestRules(t *testing.T) {
 
 		res := serverTest(nil, req)
 
-		code := 400
+		code := 500
 		if res.Code != code {
 			t.Errorf("wants %d status code, got %d", code, res.Code)
 		}
@@ -104,7 +104,7 @@ func TestRules(t *testing.T) {
 
 		res := serverTest(srv, req)
 
-		code := 400
+		code := 500
 		if res.Code != code {
 			t.Errorf("wants %d status code, got %d", code, res.Code)
 		}
@@ -179,7 +179,7 @@ func TestImportRules(t *testing.T) {
 		req := fileUpload("rules", "/rules/import")
 		res := serverTest(srv, req)
 
-		code := 400
+		code := 500
 		if res.Code != code {
 			t.Errorf("wants %d status code, got %d", code, res.Code)
 		}
@@ -199,7 +199,7 @@ func TestImportRules(t *testing.T) {
 		req := fileUpload("rules", "/rules/import")
 		res := serverTest(srv, req)
 
-		code := 400
+		code := 500
 		if res.Code != code {
 			t.Errorf("wants %d status code, got %d", code, res.Code)
 		}

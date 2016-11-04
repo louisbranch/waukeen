@@ -37,8 +37,13 @@ func (srv *Server) render(w http.ResponseWriter, data interface{}, path ...strin
 	err := srv.Template.Render(w, data, path...)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, err)
+		fmt.Fprintln(w, err)
 	}
+}
+
+func (srv *Server) renderError(w http.ResponseWriter, err error) {
+	w.WriteHeader(http.StatusInternalServerError)
+	srv.render(w, err, "500")
 }
 
 func (srv *Server) index(w http.ResponseWriter, r *http.Request) {

@@ -1,7 +1,6 @@
 package web
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -19,12 +18,12 @@ func (srv *Server) transactions(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		tr, err := srv.DB.FindTransaction(id)
+		if err != nil {
+			srv.renderError(w, err)
+			return
+		}
 		if tr.Alias == "" {
 			tr.Alias = tr.Title
-		}
-		if err != nil {
-			srv.render(w, nil, "404")
-			return
 		}
 		srv.render(w, tr, "transaction")
 	case "POST":
@@ -78,8 +77,7 @@ func (srv *Server) transactions(w http.ResponseWriter, r *http.Request) {
 		err = srv.DB.UpdateTransaction(tr)
 
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintln(w, err)
+			srv.renderError(w, err)
 			return
 		}
 

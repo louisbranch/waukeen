@@ -58,7 +58,7 @@ func TestCreateStatement(t *testing.T) {
 		req := httptest.NewRequest("POST", "/statements", nil)
 		res := serverTest(srv, req)
 
-		code := 400
+		code := 500
 		if res.Code != code {
 			t.Errorf("wants %d status code, got %d", code, res.Code)
 		}
@@ -71,11 +71,10 @@ func TestCreateStatement(t *testing.T) {
 		req := fileUpload("statement", "/statements")
 		res := serverTest(srv, req)
 
-		code := 400
+		code := 500
 		if res.Code != code {
 			t.Errorf("wants %d status code, got %d (%s)", code, res.Code, res.Body)
 		}
-
 	})
 
 	t.Run("Statement Error", func(t *testing.T) {

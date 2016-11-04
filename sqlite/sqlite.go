@@ -2,7 +2,6 @@ package sqlite
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/luizbranco/waukeen"
 	sqlite3 "github.com/mattn/go-sqlite3"
+	"github.com/pkg/errors"
 )
 
 type DB struct {
@@ -133,7 +133,7 @@ func (db *DB) FindAccounts(ids ...string) ([]waukeen.Account, error) {
 	var query string
 
 	if len(ids) == 0 {
-		query = "SELECT id, number, name, type, currency, balance FROM accounts"
+		query = "SELECT id, number, name type, currency, balance FROM accounts"
 	} else {
 		query = fmt.Sprintf(`SELECT id, number, name, type, currency, balance FROM
 		accounts where id IN (%s)`, toInCodition(ids))
@@ -141,7 +141,7 @@ func (db *DB) FindAccounts(ids ...string) ([]waukeen.Account, error) {
 
 	rows, err := db.Query(query)
 	if err != nil {
-		return nil, fmt.Errorf("error querying accounts: %s", err)
+		return nil, errors.Wrap(err, "querying accounts")
 	}
 	defer rows.Close()
 
@@ -149,13 +149,13 @@ func (db *DB) FindAccounts(ids ...string) ([]waukeen.Account, error) {
 		a := waukeen.Account{}
 		err = rows.Scan(&a.ID, &a.Number, &a.Name, &a.Type, &a.Currency, &a.Balance)
 		if err != nil {
-			return nil, fmt.Errorf("error scanning accounts: %s", err)
+			return nil, errors.Wrap(err, "scanning accounts")
 		}
 		accounts = append(accounts, a)
 	}
 	err = rows.Err()
 	if err != nil {
-		return nil, fmt.Errorf("error finding accounts: %s", err)
+		return nil, errors.Wrap(err, "finding accounts")
 	}
 	return accounts, nil
 }
@@ -169,7 +169,7 @@ func (db *DB) FindAccount(number string) (*waukeen.Account, error) {
 		&a.Currency, &a.Balance)
 
 	if err != nil {
-		return nil, fmt.Errorf("error finding account: %s", err)
+		return nil, errors.Wrap(err, "finding account")
 	}
 
 	return a, nil

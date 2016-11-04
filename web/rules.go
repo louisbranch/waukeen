@@ -1,7 +1,6 @@
 package web
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -22,8 +21,7 @@ func (srv *Server) rules(w http.ResponseWriter, r *http.Request) {
 		rules, err := srv.DB.FindRules()
 
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintln(w, err)
+			srv.renderError(w, err)
 			return
 		}
 
@@ -33,7 +31,7 @@ func (srv *Server) rules(w http.ResponseWriter, r *http.Request) {
 		n, err := strconv.Atoi(t)
 
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			srv.renderError(w, err)
 			return
 		}
 
@@ -46,7 +44,7 @@ func (srv *Server) rules(w http.ResponseWriter, r *http.Request) {
 		err = srv.DB.CreateRule(rule)
 
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			srv.renderError(w, err)
 			return
 		}
 
@@ -63,16 +61,14 @@ func (srv *Server) importRules(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		file, _, err := r.FormFile("rules")
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintln(w, err)
+			srv.renderError(w, err)
 			return
 		}
 
 		rules, err := srv.RulesImporter.Import(file)
 
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintln(w, err)
+			srv.renderError(w, err)
 			return
 		}
 
@@ -80,8 +76,7 @@ func (srv *Server) importRules(w http.ResponseWriter, r *http.Request) {
 			err := srv.DB.CreateRule(&r)
 
 			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprintln(w, err)
+				srv.renderError(w, err)
 				return
 			}
 

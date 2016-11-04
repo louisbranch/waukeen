@@ -1,11 +1,11 @@
 package web
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/luizbranco/waukeen"
+	"github.com/pkg/errors"
 )
 
 func (srv *Server) newTag(w http.ResponseWriter, r *http.Request) {
@@ -24,8 +24,7 @@ func (srv *Server) tags(w http.ResponseWriter, r *http.Request) {
 			tags, err := srv.DB.AllTags()
 
 			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprintln(w, err)
+				srv.renderError(w, err)
 				return
 			}
 
@@ -44,7 +43,8 @@ func (srv *Server) tags(w http.ResponseWriter, r *http.Request) {
 		n, err := strconv.ParseInt(b, 10, 64)
 
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			errors.Wrap(err, "invalid monthly budget number")
+			srv.renderError(w, err)
 			return
 		}
 
@@ -63,7 +63,7 @@ func (srv *Server) tags(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			srv.renderError(w, err)
 			return
 		}
 

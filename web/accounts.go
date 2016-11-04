@@ -1,7 +1,6 @@
 package web
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -115,22 +114,19 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 
 	accounts, err := srv.DB.FindAccounts()
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err)
+		srv.renderError(w, err)
 		return
 	}
 
 	transactions, err := srv.DB.FindTransactions(opt)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err)
+		srv.renderError(w, err)
 		return
 	}
 
 	tags, err := srv.DB.AllTags()
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err)
+		srv.renderError(w, err)
 		return
 	}
 

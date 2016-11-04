@@ -110,13 +110,13 @@ func (db *DB) CreateAccount(a *waukeen.Account) error {
 	res, err := db.Exec(q, a.Number, a.Name, a.Type, a.Currency, a.Balance)
 
 	if err != nil {
-		return fmt.Errorf("error creating account: %s", err)
+		return errors.Wrap(err, "creating account")
 	}
 
 	id, err := res.LastInsertId()
 
 	if err != nil {
-		return fmt.Errorf("error retrieving last account id: %s", err)
+		return errors.Wrap(err, "retrieving last account id")
 	}
 
 	a.ID = strconv.FormatInt(id, 10)
@@ -191,13 +191,13 @@ func (db *DB) CreateTransaction(t *waukeen.Transaction) error {
 		t.Description, t.Amount, t.Date)
 
 	if err != nil {
-		return fmt.Errorf("error creating transaction: %s", err)
+		return errors.Wrap(err, "create transaction")
 	}
 
 	id, err := res.LastInsertId()
 
 	if err != nil {
-		return fmt.Errorf("error retrieving last transaction id: %s", err)
+		return errors.Wrap(err, "retrieve last transaction id")
 	}
 
 	t.ID = strconv.FormatInt(id, 10)
@@ -209,12 +209,12 @@ func (db *DB) CreateTransaction(t *waukeen.Transaction) error {
 			err = db.CreateTag(tag)
 		}
 		if err != nil {
-			return fmt.Errorf("error creating transaction tag %s:", name, err)
+			return errors.Wrap(err, "create transaction tag")
 		}
 		q := `INSERT into transaction_tags (transaction_id, tag_id) values (?, ?)`
 		_, err = db.Exec(q, t.ID, tag.ID)
 		if err != nil {
-			return fmt.Errorf("error creating transaction tag relation %s:", name, err)
+			return errors.Wrap(err, "create transaction tag relation")
 		}
 	}
 
@@ -240,12 +240,12 @@ func (db *DB) UpdateTransaction(t *waukeen.Transaction) error {
 			err = db.CreateTag(tag)
 		}
 		if err != nil {
-			return fmt.Errorf("error updating transaction tag %s:", name, err)
+			return errors.Wrap(err, "update transaction tag")
 		}
 		q := `INSERT OR IGNORE into transaction_tags (transaction_id, tag_id) values (?, ?)`
 		_, err = db.Exec(q, t.ID, tag.ID)
 		if err != nil {
-			return fmt.Errorf("error updating transaction tag relation %s:", name, err)
+			return errors.Wrap(err, "update transaction tag relation")
 		}
 	}
 
@@ -256,7 +256,7 @@ func (db *DB) UpdateTransaction(t *waukeen.Transaction) error {
 		t.Description, t.Amount, t.Date, t.ID)
 
 	if err != nil {
-		return fmt.Errorf("error updating transaction: %s", err)
+		return errors.Wrap(err, "update transaction")
 	}
 
 	return nil
@@ -344,7 +344,7 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 
 	rows, err := db.Query(query)
 	if err != nil {
-		return nil, fmt.Errorf("error querying transactions: %s (%s)", err, query)
+		return nil, errors.Wrapf(err, "transaction query %s", query)
 	}
 	defer rows.Close()
 
@@ -353,7 +353,7 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 		err = rows.Scan(&t.ID, &t.AccountID, &t.FITID, &t.Type, &t.Title, &t.Alias,
 			&t.Description, &t.Amount, &t.Date)
 		if err != nil {
-			return nil, fmt.Errorf("error scanning transactions: %s", err)
+			return nil, errors.Wrap(err, "transaction scan")
 		}
 
 		tags, err := db.findTags(t.ID)
@@ -366,7 +366,7 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 	}
 	err = rows.Err()
 	if err != nil {
-		return nil, fmt.Errorf("error finding transactions: %s", err)
+		return nil, errors.Wrap(err, "find transaction")
 	}
 	return transactions, nil
 }
@@ -403,13 +403,13 @@ func (db *DB) CreateRule(r *waukeen.Rule) error {
 	res, err := db.Exec(q, r.Type, r.Match, r.Result)
 
 	if err != nil {
-		return fmt.Errorf("error creating rule: %s", err)
+		return errors.Wrap(err, "create rule")
 	}
 
 	id, err := res.LastInsertId()
 
 	if err != nil {
-		return fmt.Errorf("error retrieving last rule id: %s", err)
+		return errors.Wrap(err, "retrieve last rule id")
 	}
 
 	r.ID = strconv.FormatInt(id, 10)
@@ -449,11 +449,11 @@ func (db *DB) FindRules(ids ...string) ([]waukeen.Rule, error) {
 func (db *DB) DeleteRule(id string) error {
 	res, err := db.Exec("DELETE FROM rules where id = ?", id)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "delete rule")
 	}
-	qt, err := res.RowsAffected()
+	qt, _ := res.RowsAffected()
 	if qt == 0 {
-		return fmt.Errorf("invalid rule id %s", id)
+		return errors.New("invalid rule id")
 	}
 	return err
 }

@@ -110,13 +110,13 @@ func (db *DB) CreateAccount(a *waukeen.Account) error {
 	res, err := db.Exec(q, a.Number, a.Name, a.Type, a.Currency, a.Balance)
 
 	if err != nil {
-		return errors.Wrap(err, "creating account")
+		return errors.Wrap(err, "create account")
 	}
 
 	id, err := res.LastInsertId()
 
 	if err != nil {
-		return errors.Wrap(err, "retrieving last account id")
+		return errors.Wrap(err, "retrieve last account id")
 	}
 
 	a.ID = strconv.FormatInt(id, 10)
@@ -141,7 +141,7 @@ func (db *DB) FindAccounts(ids ...string) ([]waukeen.Account, error) {
 
 	rows, err := db.Query(query)
 	if err != nil {
-		return nil, errors.Wrap(err, "querying accounts")
+		return nil, errors.Wrap(err, "query accounts")
 	}
 	defer rows.Close()
 
@@ -149,13 +149,13 @@ func (db *DB) FindAccounts(ids ...string) ([]waukeen.Account, error) {
 		a := waukeen.Account{}
 		err = rows.Scan(&a.ID, &a.Number, &a.Name, &a.Type, &a.Currency, &a.Balance)
 		if err != nil {
-			return nil, errors.Wrap(err, "scanning accounts")
+			return nil, errors.Wrap(err, "scan accounts")
 		}
 		accounts = append(accounts, a)
 	}
 	err = rows.Err()
 	if err != nil {
-		return nil, errors.Wrap(err, "finding accounts")
+		return nil, errors.Wrap(err, "find accounts")
 	}
 	return accounts, nil
 }
@@ -169,7 +169,7 @@ func (db *DB) FindAccount(number string) (*waukeen.Account, error) {
 		&a.Currency, &a.Balance)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "finding account")
+		return nil, errors.Wrap(err, "find account")
 	}
 
 	return a, nil
@@ -353,7 +353,7 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 		err = rows.Scan(&t.ID, &t.AccountID, &t.FITID, &t.Type, &t.Title, &t.Alias,
 			&t.Description, &t.Amount, &t.Date)
 		if err != nil {
-			return nil, errors.Wrap(err, "transaction scan")
+			return nil, errors.Wrap(err, "scan transaction")
 		}
 
 		tags, err := db.findTags(t.ID)

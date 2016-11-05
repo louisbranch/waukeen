@@ -29,5 +29,6 @@
 	{"type": "tag", "match": "starbucks", "result": "restaurants"},
 	{"type": "tag", "match": "netflix.com", "result": "entertainment"},
 	{"type": "tag", "match": "animal", "result": "pet"},
+	{"type": "tag", "match": "petsmart", "result": "pet"},
 	{"type": "tag", "match": "sephora", "result": "personal care"}
 ]

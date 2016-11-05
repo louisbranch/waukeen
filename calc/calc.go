@@ -1,8 +1,6 @@
 package calc
 
 import (
-	"strings"
-
 	"github.com/bradfitz/slice" // FIX Go 1.8 has built-in slice sort
 	"github.com/luizbranco/waukeen"
 )
@@ -32,6 +30,7 @@ func (Budgeter) Calculate(months int, trs []waukeen.Transaction,
 
 	for _, t := range tags {
 		b := m[t.Name]
+		b.Tag = t.Name
 		b.Planned = t.MonthlyBudget * int64(months)
 		m[t.Name] = b
 	}
@@ -41,15 +40,7 @@ func (Budgeter) Calculate(months int, trs []waukeen.Transaction,
 	}
 
 	slice.Sort(budget, func(i, j int) bool {
-		t1 := budget[i].Tag
-		t2 := budget[j].Tag
-		if t1 == "other" {
-			return false
-		}
-		if t2 == "other" {
-			return true
-		}
-		return strings.Compare(t1, t2) < 0
+		return budget[i].Spent > budget[j].Spent
 	})
 
 	return budget

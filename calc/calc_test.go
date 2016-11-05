@@ -31,12 +31,14 @@ func TestCalculate(t *testing.T) {
 			tags: []waukeen.Tag{
 				{Name: "food", MonthlyBudget: 2000},
 				{Name: "pizza", MonthlyBudget: 5000},
+				{Name: "liquor", MonthlyBudget: 1000},
 			},
 			budget: []waukeen.Budget{
-				{Tag: "food", Transactions: 1, Planned: 2000, Spent: 1000},
-				{Tag: "gift", Transactions: 1, Planned: 0, Spent: 4500},
 				{Tag: "pizza", Transactions: 2, Planned: 5000, Spent: 5500},
 				{Tag: "travel", Transactions: 1, Planned: 0, Spent: 5000},
+				{Tag: "gift", Transactions: 1, Planned: 0, Spent: 4500},
+				{Tag: "food", Transactions: 1, Planned: 2000, Spent: 1000},
+				{Tag: "liquor", Transactions: 0, Planned: 1000, Spent: 0},
 			},
 		},
 		{
@@ -50,8 +52,8 @@ func TestCalculate(t *testing.T) {
 				{Name: "food", MonthlyBudget: 2000},
 			},
 			budget: []waukeen.Budget{
-				{Tag: "food", Transactions: 1, Planned: 6000, Spent: 1000},
 				{Tag: "other", Transactions: 2, Planned: 0, Spent: 5250},
+				{Tag: "food", Transactions: 1, Planned: 6000, Spent: 1000},
 			},
 		},
 	}

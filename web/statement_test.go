@@ -1,10 +1,11 @@
 package web
 
 import (
-	"errors"
 	"io"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/pkg/errors"
 
 	"github.com/luizbranco/waukeen"
 	"github.com/luizbranco/waukeen/mock"

@@ -38,7 +38,7 @@ func TestNewRule(t *testing.T) {
 
 func TestRules(t *testing.T) {
 	t.Run("Invalid Method", func(t *testing.T) {
-		req := httptest.NewRequest("DELETE", "/rules", nil)
+		req := httptest.NewRequest("DELETE", "/rules/", nil)
 		res := serverTest(nil, req)
 
 		code := 405
@@ -54,7 +54,7 @@ func TestRules(t *testing.T) {
 		}
 		srv := &Server{DB: db}
 
-		req := httptest.NewRequest("GET", "/rules", nil)
+		req := httptest.NewRequest("GET", "/rules/", nil)
 		res := serverTest(srv, req)
 
 		code := 500
@@ -70,7 +70,7 @@ func TestRules(t *testing.T) {
 		}
 		srv := &Server{DB: db}
 
-		req := httptest.NewRequest("GET", "/rules", nil)
+		req := httptest.NewRequest("GET", "/rules/", nil)
 		res := serverTest(srv, req)
 
 		code := 200
@@ -80,7 +80,7 @@ func TestRules(t *testing.T) {
 	})
 
 	t.Run("Post new rule invalid type", func(t *testing.T) {
-		req := httptest.NewRequest("POST", "/rules", nil)
+		req := httptest.NewRequest("POST", "/rules/", nil)
 		req.Form = url.Values{}
 		req.Form.Set("type", "a")
 
@@ -99,7 +99,7 @@ func TestRules(t *testing.T) {
 		}
 		srv := &Server{DB: db}
 
-		req := httptest.NewRequest("POST", "/rules", nil)
+		req := httptest.NewRequest("POST", "/rules/", nil)
 		req.Form = url.Values{}
 		req.Form.Set("type", "1")
 
@@ -127,7 +127,7 @@ func TestRules(t *testing.T) {
 		}
 		srv := &Server{DB: db}
 
-		req := httptest.NewRequest("POST", "/rules", nil)
+		req := httptest.NewRequest("POST", "/rules/", nil)
 		req.Form = url.Values{}
 		req.Form.Set("type", strconv.Itoa(int(rule.Type)))
 		req.Form.Set("match", rule.Match)

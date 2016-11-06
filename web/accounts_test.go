@@ -35,7 +35,7 @@ func TestAccounts(t *testing.T) {
 	srv := &Server{DB: db, BudgetCalculator: budgeter}
 
 	t.Run("Invalid Method", func(t *testing.T) {
-		req := httptest.NewRequest("POST", "/accounts", nil)
+		req := httptest.NewRequest("POST", "/accounts/", nil)
 		res := serverTest(nil, req)
 		code := 405
 		if res.Code != code {
@@ -44,7 +44,7 @@ func TestAccounts(t *testing.T) {
 	})
 
 	t.Run("Empty accounts and transactions list", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/accounts", nil)
+		req := httptest.NewRequest("GET", "/accounts/", nil)
 		res := serverTest(srv, req)
 		code := 200
 		if res.Code != code {
@@ -56,7 +56,7 @@ func TestAccounts(t *testing.T) {
 		db.FindAccountsMethod = func(ids ...string) ([]waukeen.Account, error) {
 			return nil, errors.New("not implemented")
 		}
-		req := httptest.NewRequest("GET", "/accounts", nil)
+		req := httptest.NewRequest("GET", "/accounts/", nil)
 		res := serverTest(srv, req)
 
 		code := 500
@@ -69,7 +69,7 @@ func TestAccounts(t *testing.T) {
 		db.FindTransactionsMethod = func(waukeen.TransactionsDBOptions) ([]waukeen.Transaction, error) {
 			return nil, errors.New("not implemented")
 		}
-		req := httptest.NewRequest("GET", "/accounts", nil)
+		req := httptest.NewRequest("GET", "/accounts/", nil)
 		res := serverTest(srv, req)
 
 		code := 500
@@ -91,7 +91,7 @@ func TestAccounts(t *testing.T) {
 			*/
 			return nil, nil
 		}
-		req := httptest.NewRequest("GET", "/accounts", nil)
+		req := httptest.NewRequest("GET", "/accounts/", nil)
 		res := serverTest(srv, req)
 
 		code := 200
@@ -113,7 +113,7 @@ func TestAccounts(t *testing.T) {
 			*/
 			return nil, nil
 		}
-		req := httptest.NewRequest("GET", "/accounts", nil)
+		req := httptest.NewRequest("GET", "/accounts/", nil)
 		req.Form = url.Values{}
 		req.Form.Set("start", "20161024")
 		req.Form.Set("end", "20161024")
@@ -148,7 +148,7 @@ func TestAccounts(t *testing.T) {
 			}
 			return nil, nil
 		}
-		req := httptest.NewRequest("GET", "/accounts", nil)
+		req := httptest.NewRequest("GET", "/accounts/", nil)
 		req.Form = url.Values{}
 		req.Form.Set("start", "2016-10")
 		req.Form.Set("end", "2016-10")

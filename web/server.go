@@ -19,10 +19,10 @@ type Server struct {
 func (srv *Server) NewServeMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/accounts", srv.accounts)
+	mux.HandleFunc("/accounts/", srv.accounts)
 	mux.HandleFunc("/rules/import", srv.importRules)
 	mux.HandleFunc("/rules/new", srv.newRule)
-	mux.HandleFunc("/rules", srv.rules)
+	mux.HandleFunc("/rules/", srv.rules)
 	mux.HandleFunc("/statements/new", srv.newStatement)
 	mux.HandleFunc("/statements", srv.createStatement)
 	mux.HandleFunc("/tags/new", srv.newTag)

@@ -116,8 +116,6 @@ type TransactionsDBOptions struct {
 	Start    time.Time
 	End      time.Time
 	Tags     []string
-	Limit    int
-	Offset   int
 }
 
 type TransactionTransformer interface {

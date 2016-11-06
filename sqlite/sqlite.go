@@ -428,7 +428,7 @@ func (db *DB) FindRules(ids ...string) ([]waukeen.Rule, error) {
 		(%s)`, toInCodition(ids))
 	}
 
-	rows, err := db.Query(query)
+	rows, err := db.Query(query + " ORDER BY match COLLATE NOCASE")
 	if err != nil {
 		return nil, err
 	}

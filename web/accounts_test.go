@@ -152,9 +152,9 @@ func TestAccounts(t *testing.T) {
 		req.Form = url.Values{}
 		req.Form.Set("start", "2016-10")
 		req.Form.Set("end", "2016-10")
-		req.Form.Set("transaction_type", "1")
+		req.Form.Set("types", "1")
 		req.Form.Set("tags", "first, second ")
-		req.Form.Set("account", "2")
+		req.Form.Set("accounts", "2")
 		res := serverTest(srv, req)
 
 		code := 200

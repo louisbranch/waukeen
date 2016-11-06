@@ -8,17 +8,17 @@
   <body>
     <form action="/accounts" method="get">
       <div>
-        <label for="account">Account:</label>
+        <label for="accounts">Account:</label>
         {{ $form := .Form }}
-        <select name="account" multiple>
+        <select name="accounts" multiple>
           {{ range .Accounts }}
             <option value="{{ .ID }}" {{ if contains $form.Accounts .ID }} selected {{ end }} >{{ .Number }}</option>
           {{ end }}
         </select>
       </div>
       <div>
-        <label for="transaction_type">Type:</label>
-        <select name="transaction_type" multiple>
+        <label for="types">Type:</label>
+        <select name="types" multiple>
           {{ if $form.Types }}
             <option value="1" {{ if contains $form.Types "1" }} selected {{ end }} >Credit</option>
             <option value="2" {{ if contains $form.Types "2" }} selected {{ end }} >Debit</option>

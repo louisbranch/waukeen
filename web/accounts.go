@@ -2,11 +2,9 @@ package web
 
 import (
 	"net/http"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/luizbranco/waukeen"
+	"github.com/luizbranco/waukeen/web/accounts"
 )
 
 type accountForm struct {
@@ -17,88 +15,10 @@ type accountForm struct {
 	End      string
 }
 
-func newAccountForm(opt waukeen.TransactionsDBOptions) accountForm {
-	acc := accountForm{
-		Accounts: opt.Accounts,
-		Tags:     opt.Tags,
-	}
-
-	acc.Start = opt.Start.Format("2006-01")
-	acc.End = opt.End.Format("2006-01")
-
-	for _, t := range opt.Types {
-		acc.Types = append(acc.Types, strconv.Itoa(int(t)))
-	}
-
-	return acc
-}
-
-func getTransactionForm(r *http.Request) waukeen.TransactionsDBOptions {
-	opt := waukeen.TransactionsDBOptions{}
-
-	start := r.FormValue("start")
-	if start != "" {
-		t, err := time.Parse("2006-01", start)
-		if err == nil {
-			opt.Start = t
-		}
-	}
-
-	end := r.FormValue("end")
-	if end != "" {
-		t, err := time.Parse("2006-01", end)
-		if err == nil {
-			opt.End = t
-		}
-	}
-
-	opt.Accounts = r.Form["account"]
-
-	ttype, ok := r.Form["transaction_type"]
-	if ok {
-		opt.Types = make([]waukeen.TransactionType, len(ttype))
-		for i, t := range ttype {
-			n, err := strconv.Atoi(t)
-			if err == nil {
-				opt.Types[i] = waukeen.TransactionType(n)
-			}
-		}
-	} else {
-		opt.Types = []waukeen.TransactionType{waukeen.Debit}
-	}
-
-	var tags []string
-	vals := strings.Split(r.FormValue("tags"), ",")
-	for _, t := range vals {
-		tag := strings.Trim(t, " ")
-		if tag != "" {
-			tags = append(tags, tag)
-		}
-	}
-	if len(tags) > 0 {
-		opt.Tags = tags
-	}
-
-	now := time.Now()
-	var year int
-	var month time.Month
-
-	if opt.Start.IsZero() {
-		opt.Start = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
-	}
-
-	if opt.End.IsZero() {
-		month = now.Month()
-		year = now.Year()
-	} else {
-		month = opt.End.Month()
-		year = opt.End.Year()
-	}
-
-	if month == time.December {
-		opt.End = time.Date(year, month, 31, 0, 0, 0, 0, time.UTC)
-	} else {
-		opt.End = time.Date(year, month+1, 1, 0, 0, 0, 0, time.UTC).Add(-24 * time.Hour)
+func getCookieForm(r *http.Request) (opt waukeen.TransactionsDBOptions) {
+	_, err := r.Cookie("accounts_form")
+	if err == nil {
+		return opt
 	}
 
 	return opt
@@ -110,9 +30,10 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	opt := getTransactionForm(r)
+	form := accounts.NewForm(r)
+	opt := form.DBOptions()
 
-	accounts, err := srv.DB.FindAccounts()
+	accs, err := srv.DB.FindAccounts()
 	if err != nil {
 		srv.renderError(w, err)
 		return
@@ -135,30 +56,33 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 		total += t.Amount
 	}
 
-	ids := make([]string, len(accounts))
+	ids := make([]string, len(accs))
 
-	for i, acc := range accounts {
+	for i, acc := range accs {
 		ids[i] = acc.ID
 	}
 
+	form.Accounts = ids
 	opt.Accounts = ids
 
 	months := monthSpam(opt)
 	budgets := srv.BudgetCalculator.Calculate(months, transactions, tags)
 
 	content := struct {
-		Form         accountForm
+		Form         *accounts.Form
 		Accounts     []waukeen.Account
 		Transactions []waukeen.Transaction
 		Total        int64
 		Budgets      []waukeen.Budget
 	}{
-		Form:         newAccountForm(opt),
-		Accounts:     accounts,
+		Form:         form,
+		Accounts:     accs,
 		Transactions: transactions,
 		Total:        total,
 		Budgets:      budgets,
 	}
+
+	form.Save(w)
 
 	srv.render(w, content, "accounts")
 }

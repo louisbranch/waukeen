@@ -34,6 +34,7 @@ func (srv *Server) NewServeMux() *http.ServeMux {
 }
 
 func (srv *Server) render(w http.ResponseWriter, data interface{}, path ...string) {
+	path = append([]string{"layout"}, path...)
 	err := srv.Template.Render(w, data, path...)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

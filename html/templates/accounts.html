@@ -41,7 +41,7 @@
     <header>
       <h2>Budget</h2>
     </header>
-    <table>
+    <table class="table table-striped">
       <thead>
         <tr>
           <th>Tag</th>
@@ -63,7 +63,7 @@
     </table>
   </section>
   <h2>Transactions</h2>
-  <table>
+  <table class="table table-striped">
     <thead>
       <tr>
         <th>Date</th>
@@ -79,7 +79,7 @@
     </thead>
     <tbody>
       {{ range .Transactions }}
-      <tr>
+      <tr class="{{if eq .Type 1}}positive{{else}}negative{{end}}">
         <td>
           {{ .Date.Format "Jan 02" }}
         </td>
@@ -90,10 +90,10 @@
             {{ .Title }}:
           {{ end }}
         </td>
-        <td>
+        <td class="transaction-type">
           {{ .Type }}
         </td>
-        <td>
+        <td class="transaction-amount">
           {{ currency .Amount }}
         </td>
         <td>

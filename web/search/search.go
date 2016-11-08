@@ -83,13 +83,10 @@ func (f *Search) DBOptions() (o waukeen.TransactionsDBOptions) {
 		}
 	}
 
-	o.Accounts = f.Accounts
-
-	o.Types = make([]waukeen.TransactionType, len(f.Types))
-	for i, t := range f.Types {
+	for _, t := range f.Types {
 		n, err := strconv.Atoi(t)
 		if err == nil {
-			o.Types[i] = waukeen.TransactionType(n)
+			o.Types = append(o.Types, waukeen.TransactionType(n))
 		}
 	}
 
@@ -97,8 +94,8 @@ func (f *Search) DBOptions() (o waukeen.TransactionsDBOptions) {
 		o.Types = []waukeen.TransactionType{waukeen.Debit}
 	}
 
+	o.Accounts = f.Accounts
 	o.Tags = f.Tags
-
 	o = setDates(o)
 
 	f.Start = o.Start.Format("2006-01")

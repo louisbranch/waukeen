@@ -19,6 +19,9 @@ type Server struct {
 func (srv *Server) NewServeMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
+	fs := http.FileServer(http.Dir("assets"))
+	mux.Handle("/assets/", http.StripPrefix("/assets/", fs))
+
 	mux.HandleFunc("/accounts/", srv.accounts)
 	mux.HandleFunc("/rules/import", srv.importRules)
 	mux.HandleFunc("/rules/new", srv.newRule)

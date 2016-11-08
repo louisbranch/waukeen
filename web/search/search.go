@@ -1,4 +1,4 @@
-package accounts
+package search
 
 import (
 	"net/http"
@@ -10,7 +10,7 @@ import (
 	"github.com/luizbranco/waukeen"
 )
 
-type Form struct {
+type Search struct {
 	Accounts []string
 	Types    []string
 	Tags     []string
@@ -18,8 +18,8 @@ type Form struct {
 	End      string
 }
 
-func NewForm(r *http.Request) *Form {
-	f := &Form{}
+func New(r *http.Request) *Search {
+	f := &Search{}
 	err := r.ParseForm()
 
 	if err == nil {
@@ -69,7 +69,7 @@ func split(s string) []string {
 	return r
 }
 
-func (f *Form) DBOptions() (o waukeen.TransactionsDBOptions) {
+func (f *Search) DBOptions() (o waukeen.TransactionsDBOptions) {
 	if f.Start != "" {
 		t, err := time.Parse("2006-01", f.Start)
 		if err == nil {
@@ -108,7 +108,7 @@ func (f *Form) DBOptions() (o waukeen.TransactionsDBOptions) {
 	return o
 }
 
-func (f *Form) Save(w http.ResponseWriter) {
+func (f *Search) Save(w http.ResponseWriter) {
 	v := make(url.Values)
 
 	for _, e := range f.Accounts {
@@ -136,7 +136,7 @@ func (f *Form) Save(w http.ResponseWriter) {
 	http.SetCookie(w, cookie)
 }
 
-func (f *Form) empty() bool {
+func (f *Search) empty() bool {
 	return len(f.Accounts) == 0 &&
 		len(f.Types) == 0 &&
 		len(f.Tags) == 0 &&

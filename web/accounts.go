@@ -4,25 +4,8 @@ import (
 	"net/http"
 
 	"github.com/luizbranco/waukeen"
-	"github.com/luizbranco/waukeen/web/accounts"
+	"github.com/luizbranco/waukeen/web/search"
 )
-
-type accountForm struct {
-	Accounts []string
-	Types    []string
-	Tags     []string
-	Start    string
-	End      string
-}
-
-func getCookieForm(r *http.Request) (opt waukeen.TransactionsDBOptions) {
-	_, err := r.Cookie("accounts_form")
-	if err == nil {
-		return opt
-	}
-
-	return opt
-}
 
 func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
@@ -30,7 +13,7 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	form := accounts.NewForm(r)
+	form := search.New(r)
 	opt := form.DBOptions()
 
 	accs, err := srv.DB.FindAccounts()
@@ -69,7 +52,7 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 	budgets := srv.BudgetCalculator.Calculate(months, transactions, tags)
 
 	content := struct {
-		Form         *accounts.Form
+		Form         *search.Search
 		Accounts     []waukeen.Account
 		Transactions []waukeen.Transaction
 		Total        int64

@@ -64,7 +64,7 @@ func (h *HTML) parse(names ...string) (tpl *template.Template, err error) {
 			return nil, err
 		}
 		h.sync.Lock()
-		h.cache[id] = tpl
+		//TODO h.cache[id] = tpl
 		h.sync.Unlock()
 	}
 

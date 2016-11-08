@@ -23,7 +23,6 @@ func New(r *http.Request) *Search {
 	err := r.ParseForm()
 
 	if err == nil {
-
 		f.Accounts = r.Form["accounts"]
 		f.Types = r.Form["types"]
 		f.Tags = split(r.FormValue("tags"))

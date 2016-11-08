@@ -10,6 +10,8 @@ import (
 	"github.com/luizbranco/waukeen"
 )
 
+var now time.Time
+
 type Search struct {
 	Accounts []string
 	Types    []string
@@ -96,7 +98,31 @@ func (f *Search) DBOptions() (o waukeen.TransactionsDBOptions) {
 
 	o.Accounts = f.Accounts
 	o.Tags = f.Tags
-	o = setDates(o)
+
+	if now.IsZero() {
+		now = time.Now()
+	}
+
+	var year int
+	var month time.Month
+
+	if o.Start.IsZero() {
+		o.Start = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
+	}
+
+	if o.End.IsZero() {
+		month = now.Month()
+		year = now.Year()
+	} else {
+		month = o.End.Month()
+		year = o.End.Year()
+	}
+
+	if month == time.December {
+		o.End = time.Date(year, month, 31, 0, 0, 0, 0, time.UTC)
+	} else {
+		o.End = time.Date(year, month+1, 1, 0, 0, 0, 0, time.UTC).AddDate(0, 0, -1)
+	}
 
 	f.Start = o.Start.Format("2006-01")
 	f.End = o.End.Format("2006-01")
@@ -138,30 +164,4 @@ func (f *Search) empty() bool {
 		len(f.Tags) == 0 &&
 		f.Start == "" &&
 		f.End == ""
-}
-
-func setDates(opt waukeen.TransactionsDBOptions) waukeen.TransactionsDBOptions {
-	now := time.Now()
-	var year int
-	var month time.Month
-
-	if opt.Start.IsZero() {
-		opt.Start = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
-	}
-
-	if opt.End.IsZero() {
-		month = now.Month()
-		year = now.Year()
-	} else {
-		month = opt.End.Month()
-		year = opt.End.Year()
-	}
-
-	if month == time.December {
-		opt.End = time.Date(year, month, 31, 0, 0, 0, 0, time.UTC)
-	} else {
-		opt.End = time.Date(year, month+1, 1, 0, 0, 0, 0, time.UTC).Add(-24 * time.Hour)
-	}
-
-	return opt
 }

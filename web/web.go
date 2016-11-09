@@ -2,18 +2,12 @@ package web
 
 import "io"
 
-type Link struct {
-	Name   string
-	URL    string
-	Active bool
-}
-
 type Page struct {
-	Title    string
-	Layout   string
-	Partials []string
-	Menu     []Link
-	Content  interface{}
+	Title      string
+	ActiveMenu string
+	Layout     string
+	Partials   []string
+	Content    interface{}
 }
 
 type Template interface {

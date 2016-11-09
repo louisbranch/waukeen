@@ -69,9 +69,10 @@ func (srv *Server) accounts(w http.ResponseWriter, r *http.Request) {
 	form.Save(w)
 
 	page := web.Page{
-		Title:    "Accounts",
-		Content:  content,
-		Partials: []string{"accounts"},
+		Title:      "Accounts",
+		ActiveMenu: "accounts",
+		Content:    content,
+		Partials:   []string{"accounts"},
 	}
 
 	srv.render(w, page)

@@ -34,9 +34,10 @@ func (srv *Server) tags(w http.ResponseWriter, r *http.Request) {
 			}
 
 			page := web.Page{
-				Title:    "Tags",
-				Content:  tags,
-				Partials: []string{"tags"},
+				Title:      "Tags",
+				ActiveMenu: "tags",
+				Content:    tags,
+				Partials:   []string{"tags"},
 			}
 			srv.render(w, page)
 			return

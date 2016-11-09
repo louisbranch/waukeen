@@ -33,9 +33,10 @@ func (srv *Server) rules(w http.ResponseWriter, r *http.Request) {
 		}
 
 		page := web.Page{
-			Title:    "Rules",
-			Content:  rules,
-			Partials: []string{"rules"},
+			Title:      "Rules",
+			ActiveMenu: "rules",
+			Content:    rules,
+			Partials:   []string{"rules"},
 		}
 
 		srv.render(w, page)

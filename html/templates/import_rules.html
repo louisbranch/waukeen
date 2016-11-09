@@ -1,7 +1,9 @@
+{{ define "title" }}Import Rules{{ end}}
+
 {{define "content"}}
-    <h1>Import Rules</h1>
-    <form action="/rules/import" method="post" enctype="multipart/form-data">
-      <input type="file" name="rules" />
-      <input type="submit" value="Import" />
-    </form>
+  <h1>Import Rules</h1>
+  <form action="/rules/import" method="post" enctype="multipart/form-data">
+    <input type="file" name="rules" />
+    <input type="submit" value="Import" />
+  </form>
 {{end}}

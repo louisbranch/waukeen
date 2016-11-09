@@ -1,26 +1,20 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>New Rule</title>
-  </head>
-  <body>
-    <h1>New Rule</h1>
-    <form action="/rules/" method="post">
-      <select name="type">
-        <option value="1">Replace</option>
-        <option value="2" selected>Tag</option>
-      </select>
-      <div>
-        <input type="text" name="match" />
-      </div>
-      <div>
-        <input type="text" name="result" />
-      </div>
-      <div>
-        <input type="submit" value="Save" />
-      </div>
-    </form>
-  </body>
-</html>
+{{ define "title" }}New Rule{{ end}}
+
+{{define "content"}}
+  <h1>New Rule</h1>
+  <form action="/rules/" method="post">
+    <select name="type">
+      <option value="1">Replace</option>
+      <option value="2" selected>Tag</option>
+    </select>
+    <div>
+      <input type="text" name="match" />
+    </div>
+    <div>
+      <input type="text" name="result" />
+    </div>
+    <div>
+      <input type="submit" value="Save" />
+    </div>
+  </form>
+{{ end }}

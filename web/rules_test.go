@@ -140,7 +140,7 @@ func TestRules(t *testing.T) {
 			t.Errorf("wants %d status code, got %d", code, res.Code)
 		}
 
-		url := "/rules"
+		url := "/rules/"
 		loc := res.Header().Get("Location")
 
 		if url != loc {

@@ -55,5 +55,5 @@ func (srv *Server) index(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	srv.render(w, nil, "index")
+	http.Redirect(w, r, "/accounts/", http.StatusMovedPermanently)
 }

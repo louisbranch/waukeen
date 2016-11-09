@@ -48,7 +48,7 @@ func (srv *Server) rules(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.Redirect(w, r, "/rules", http.StatusFound)
+		http.Redirect(w, r, "/rules/", http.StatusFound)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}

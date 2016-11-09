@@ -159,7 +159,7 @@ func TestSearch_DBOptions(t *testing.T) {
 			want: waukeen.TransactionsDBOptions{
 				Types: []waukeen.TransactionType{waukeen.Debit},
 				Start: time.Date(2016, 10, 1, 0, 0, 0, 0, time.UTC),
-				End:   time.Date(2016, 11, 1, 0, 0, 0, 0, time.UTC),
+				End:   time.Date(2016, 10, 31, 0, 0, 0, 0, time.UTC),
 			},
 		},
 		{
@@ -172,7 +172,7 @@ func TestSearch_DBOptions(t *testing.T) {
 			want: waukeen.TransactionsDBOptions{
 				Types: []waukeen.TransactionType{3, 4},
 				Start: time.Date(2016, 11, 1, 0, 0, 0, 0, time.UTC),
-				End:   time.Date(2017, 1, 1, 0, 0, 0, 0, time.UTC),
+				End:   time.Date(2016, 12, 31, 0, 0, 0, 0, time.UTC),
 			},
 		},
 		{
@@ -182,14 +182,14 @@ func TestSearch_DBOptions(t *testing.T) {
 				Types:    []string{"3", "4"},
 				Tags:     []string{"food", "gift"},
 				Start:    "2016-11",
-				End:      "2016-12",
+				End:      "2017-01",
 			},
 			want: waukeen.TransactionsDBOptions{
 				Accounts: []string{"1", "2"},
 				Types:    []waukeen.TransactionType{3, 4},
 				Tags:     []string{"food", "gift"},
 				Start:    time.Date(2016, 11, 1, 0, 0, 0, 0, time.UTC),
-				End:      time.Date(2017, 1, 1, 0, 0, 0, 0, time.UTC),
+				End:      time.Date(2017, 1, 31, 0, 0, 0, 0, time.UTC),
 			},
 		},
 	}

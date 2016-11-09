@@ -121,9 +121,9 @@ func (s *Search) DBOptions() (o waukeen.TransactionsDBOptions) {
 	}
 
 	if month == time.December {
-		o.End = time.Date(year+1, time.January, 1, 0, 0, 0, 0, time.UTC)
+		o.End = time.Date(year, month, 31, 0, 0, 0, 0, time.UTC)
 	} else {
-		o.End = time.Date(year, month+1, 1, 0, 0, 0, 0, time.UTC)
+		o.End = time.Date(year, month+1, 1, 0, 0, 0, 0, time.UTC).AddDate(0, 0, -1)
 	}
 
 	s.Start = o.Start.Format("2006-01")

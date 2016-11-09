@@ -330,7 +330,7 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 	if !opts.End.IsZero() {
 		end := opts.End
 		end = end.Add(time.Hour * 24)
-		clauses = append(clauses, "transactions.date < "+end.Format("'2006-01-02'"))
+		clauses = append(clauses, "transactions.date <= "+end.Format("'2006-01-02'"))
 	}
 
 	if len(clauses) > 0 {

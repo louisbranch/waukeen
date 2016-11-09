@@ -1,4 +1,4 @@
-package web
+package server
 
 import (
 	"fmt"
@@ -19,7 +19,7 @@ type Server struct {
 func (srv *Server) NewServeMux() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	fs := http.FileServer(http.Dir("assets"))
+	fs := http.FileServer(http.Dir("web/assets"))
 	mux.Handle("/assets/", http.StripPrefix("/assets/", fs))
 
 	mux.HandleFunc("/accounts/", srv.accounts)

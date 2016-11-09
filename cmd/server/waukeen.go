@@ -6,11 +6,11 @@ import (
 	"net/http"
 
 	"github.com/luizbranco/waukeen/calc"
-	"github.com/luizbranco/waukeen/html"
 	"github.com/luizbranco/waukeen/json"
 	"github.com/luizbranco/waukeen/sqlite"
 	"github.com/luizbranco/waukeen/transformer"
-	"github.com/luizbranco/waukeen/web"
+	"github.com/luizbranco/waukeen/web/html"
+	"github.com/luizbranco/waukeen/web/server"
 	"github.com/luizbranco/waukeen/xml"
 )
 
@@ -21,9 +21,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	srv := &web.Server{
+	srv := &server.Server{
 		DB:                 db,
-		Template:           html.New("html/templates"),
+		Template:           html.New("web/templates"),
 		StatementsImporter: xml.Statement{},
 		RulesImporter:      json.Rules{},
 		Transformer:        transformer.Text{},

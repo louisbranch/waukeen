@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/luizbranco/waukeen"
+	"github.com/luizbranco/waukeen/web"
 )
 
 func (srv *Server) transactions(w http.ResponseWriter, r *http.Request) {
@@ -14,7 +15,7 @@ func (srv *Server) transactions(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		id := r.URL.Path[len("/transactions/"):]
 		if id == "" {
-			srv.render(w, nil, "404")
+			srv.renderNotFound(w)
 			return
 		}
 		tr, err := srv.DB.FindTransaction(id)
@@ -25,16 +26,21 @@ func (srv *Server) transactions(w http.ResponseWriter, r *http.Request) {
 		if tr.Alias == "" {
 			tr.Alias = tr.Title
 		}
-		srv.render(w, tr, "transaction")
+		page := web.Page{
+			Title:    "Transaction",
+			Content:  tr,
+			Partials: []string{"transaction"},
+		}
+		srv.render(w, page)
 	case "POST":
 		id := r.FormValue("id")
 		if id == "" {
-			srv.render(w, nil, "404")
+			srv.renderNotFound(w)
 			return
 		}
 		tr, err := srv.DB.FindTransaction(id)
 		if err != nil {
-			srv.render(w, nil, "404")
+			srv.renderNotFound(w)
 			return
 		}
 		tr.Alias = r.FormValue("alias")

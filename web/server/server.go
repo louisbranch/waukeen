@@ -5,11 +5,12 @@ import (
 	"net/http"
 
 	"github.com/luizbranco/waukeen"
+	"github.com/luizbranco/waukeen/web"
 )
 
 type Server struct {
 	DB                 waukeen.Database
-	Template           waukeen.Template
+	Template           web.Template
 	StatementsImporter waukeen.StatementsImporter
 	RulesImporter      waukeen.RulesImporter
 	Transformer        waukeen.TransactionTransformer
@@ -36,9 +37,12 @@ func (srv *Server) NewServeMux() *http.ServeMux {
 	return mux
 }
 
-func (srv *Server) render(w http.ResponseWriter, data interface{}, path ...string) {
-	path = append([]string{"layout"}, path...)
-	err := srv.Template.Render(w, data, path...)
+func (srv *Server) render(w http.ResponseWriter, page web.Page) {
+	if page.Layout == "" {
+		page.Layout = "layout"
+	}
+
+	err := srv.Template.Render(w, page)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintln(w, err)
@@ -47,7 +51,21 @@ func (srv *Server) render(w http.ResponseWriter, data interface{}, path ...strin
 
 func (srv *Server) renderError(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusInternalServerError)
-	srv.render(w, err, "500")
+	page := web.Page{
+		Title:    "500",
+		Content:  err,
+		Partials: []string{"500"},
+	}
+	srv.render(w, page)
+}
+
+func (srv *Server) renderNotFound(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNotFound)
+	page := web.Page{
+		Title:    "Not Found",
+		Partials: []string{"400"},
+	}
+	srv.render(w, page)
 }
 
 func (srv *Server) index(w http.ResponseWriter, r *http.Request) {

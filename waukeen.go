@@ -126,10 +126,6 @@ type BudgetCalculator interface {
 	Calculate(Months int, trs []Transaction, tags []Tag) []Budget
 }
 
-type Template interface {
-	Render(w io.Writer, data interface{}, paths ...string) error
-}
-
 func (t *Transaction) AddTags(tags ...string) {
 OUTER:
 	for _, name := range tags {

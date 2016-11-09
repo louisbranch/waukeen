@@ -1,5 +1,3 @@
-{{ define "title" }}{{ if .ID }}Edit {{ else }} New {{ end }} Tag{{ end }}
-
 {{define "content"}}
   <h1>{{ if .ID }}Edit {{ else }} New {{ end }} Tag</h1>
   <form action="/tags/" method="post">

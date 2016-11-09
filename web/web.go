@@ -1,5 +1,7 @@
 package web
 
+import "io"
+
 type Link struct {
 	Name   string
 	URL    string
@@ -7,7 +9,13 @@ type Link struct {
 }
 
 type Page struct {
-	Title   string
-	Menu    []Link
-	Content interface{}
+	Title    string
+	Layout   string
+	Partials []string
+	Menu     []Link
+	Content  interface{}
+}
+
+type Template interface {
+	Render(w io.Writer, page Page) error
 }

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/luizbranco/waukeen"
+	"github.com/luizbranco/waukeen/web"
 	"github.com/pkg/errors"
 )
 
@@ -13,7 +14,11 @@ func (srv *Server) newTag(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	srv.render(w, nil, "tag")
+	page := web.Page{
+		Title:    "New Tag",
+		Partials: []string{"tag"},
+	}
+	srv.render(w, page)
 }
 
 func (srv *Server) tags(w http.ResponseWriter, r *http.Request) {
@@ -28,16 +33,26 @@ func (srv *Server) tags(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			srv.render(w, tags, "tags")
+			page := web.Page{
+				Title:    "Tags",
+				Content:  tags,
+				Partials: []string{"tags"},
+			}
+			srv.render(w, page)
 			return
 		}
 
 		t, err := srv.DB.FindTag(name)
 		if err != nil {
-			srv.render(w, nil, "404")
+			srv.renderNotFound(w)
 			return
 		}
-		srv.render(w, t, "tag")
+		page := web.Page{
+			Title:    "Edit Tag",
+			Content:  t,
+			Partials: []string{"tag"},
+		}
+		srv.render(w, page)
 	case "POST":
 		b := r.FormValue("monthly_budget")
 		n, err := strconv.ParseInt(b, 10, 64)

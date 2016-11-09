@@ -11,6 +11,7 @@ import (
 	"os"
 
 	"github.com/luizbranco/waukeen/mock"
+	"github.com/luizbranco/waukeen/web"
 )
 
 func serverTest(srv *Server, req *http.Request) *httptest.ResponseRecorder {
@@ -20,7 +21,7 @@ func serverTest(srv *Server, req *http.Request) *httptest.ResponseRecorder {
 	if srv.Template == nil {
 		tpl := &mock.Template{}
 
-		tpl.RenderMethod = func(w io.Writer, data interface{}, path ...string) error {
+		tpl.RenderMethod = func(w io.Writer, page web.Page) error {
 			return nil
 		}
 		srv.Template = tpl

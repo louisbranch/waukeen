@@ -1,13 +1,21 @@
 package server
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/luizbranco/waukeen/web"
+)
 
 func (srv *Server) newStatement(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	srv.render(w, nil, "statement")
+	page := web.Page{
+		Title:    "Import Statement",
+		Partials: []string{"statement"},
+	}
+	srv.render(w, page)
 }
 
 func (srv *Server) createStatement(w http.ResponseWriter, r *http.Request) {

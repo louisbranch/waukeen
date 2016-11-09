@@ -4,14 +4,15 @@ import (
 	"io"
 
 	"github.com/luizbranco/waukeen"
+	"github.com/luizbranco/waukeen/web"
 )
 
 type Template struct {
-	RenderMethod func(w io.Writer, data interface{}, path ...string) error
+	RenderMethod func(w io.Writer, page web.Page) error
 }
 
-func (m *Template) Render(w io.Writer, data interface{}, path ...string) error {
-	return m.RenderMethod(w, data, path...)
+func (m *Template) Render(w io.Writer, page web.Page) error {
+	return m.RenderMethod(w, page)
 }
 
 type RulesImporter struct {

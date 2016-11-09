@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/luizbranco/waukeen"
+	"github.com/luizbranco/waukeen/web"
 )
 
 func (srv *Server) newRule(w http.ResponseWriter, r *http.Request) {
@@ -12,7 +13,13 @@ func (srv *Server) newRule(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	srv.render(w, nil, "new_rule")
+
+	page := web.Page{
+		Title:    "New Rule",
+		Partials: []string{"new_rule"},
+	}
+
+	srv.render(w, page)
 }
 
 func (srv *Server) rules(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +32,13 @@ func (srv *Server) rules(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		srv.render(w, rules, "rules")
+		page := web.Page{
+			Title:    "Rules",
+			Content:  rules,
+			Partials: []string{"rules"},
+		}
+
+		srv.render(w, page)
 	case "POST":
 		t := r.FormValue("type")
 		n, err := strconv.Atoi(t)
@@ -57,7 +70,11 @@ func (srv *Server) rules(w http.ResponseWriter, r *http.Request) {
 func (srv *Server) importRules(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		srv.render(w, nil, "import_rules")
+		page := web.Page{
+			Title:    "Import Rules",
+			Partials: []string{"import_rules"},
+		}
+		srv.render(w, page)
 	case "POST":
 		file, _, err := r.FormFile("rules")
 		if err != nil {

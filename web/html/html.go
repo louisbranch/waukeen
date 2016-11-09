@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 	"sync"
+
+	"github.com/luizbranco/waukeen/web"
 )
 
 type HTML struct {
@@ -25,7 +27,9 @@ func New(basepath string) *HTML {
 	}
 }
 
-func (h *HTML) Render(w io.Writer, data interface{}, paths ...string) error {
+func (h *HTML) Render(w io.Writer, page web.Page) error {
+	paths := append([]string{page.Layout}, page.Partials...)
+
 	for i, n := range paths {
 		p := []string{h.basepath}
 		p = append(p, strings.Split(n+".html", "/")...)
@@ -37,7 +41,7 @@ func (h *HTML) Render(w io.Writer, data interface{}, paths ...string) error {
 		return err
 	}
 
-	err = tpl.Execute(w, data)
+	err = tpl.Execute(w, page)
 	return err
 }
 

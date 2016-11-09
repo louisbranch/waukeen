@@ -10,7 +10,7 @@ import (
 	"github.com/luizbranco/waukeen"
 )
 
-var now time.Time
+var today func() time.Time
 
 type Search struct {
 	Accounts []string
@@ -70,22 +70,22 @@ func split(s string) []string {
 	return r
 }
 
-func (f *Search) DBOptions() (o waukeen.TransactionsDBOptions) {
-	if f.Start != "" {
-		t, err := time.Parse("2006-01", f.Start)
+func (s *Search) DBOptions() (o waukeen.TransactionsDBOptions) {
+	if s.Start != "" {
+		t, err := time.Parse("2006-01", s.Start)
 		if err == nil {
 			o.Start = t
 		}
 	}
 
-	if f.End != "" {
-		t, err := time.Parse("2006-01", f.End)
+	if s.End != "" {
+		t, err := time.Parse("2006-01", s.End)
 		if err == nil {
 			o.End = t
 		}
 	}
 
-	for _, t := range f.Types {
+	for _, t := range s.Types {
 		n, err := strconv.Atoi(t)
 		if err == nil {
 			o.Types = append(o.Types, waukeen.TransactionType(n))
@@ -96,12 +96,14 @@ func (f *Search) DBOptions() (o waukeen.TransactionsDBOptions) {
 		o.Types = []waukeen.TransactionType{waukeen.Debit}
 	}
 
-	o.Accounts = f.Accounts
-	o.Tags = f.Tags
+	o.Accounts = s.Accounts
+	o.Tags = s.Tags
 
-	if now.IsZero() {
-		now = time.Now()
+	if today == nil {
+		today = time.Now
 	}
+
+	now := today()
 
 	var year int
 	var month time.Month
@@ -119,13 +121,13 @@ func (f *Search) DBOptions() (o waukeen.TransactionsDBOptions) {
 	}
 
 	if month == time.December {
-		o.End = time.Date(year, month, 31, 0, 0, 0, 0, time.UTC)
+		o.End = time.Date(year+1, time.January, 1, 0, 0, 0, 0, time.UTC)
 	} else {
-		o.End = time.Date(year, month+1, 1, 0, 0, 0, 0, time.UTC).AddDate(0, 0, -1)
+		o.End = time.Date(year, month+1, 1, 0, 0, 0, 0, time.UTC)
 	}
 
-	f.Start = o.Start.Format("2006-01")
-	f.End = o.End.Format("2006-01")
+	s.Start = o.Start.Format("2006-01")
+	s.End = o.End.Format("2006-01")
 
 	return o
 }

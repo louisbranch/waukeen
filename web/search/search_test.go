@@ -137,7 +137,9 @@ func TestNew(t *testing.T) {
 }
 
 func TestSearch_DBOptions(t *testing.T) {
-	now = time.Date(2016, 10, 1, 0, 0, 0, 0, time.UTC)
+	today = func() time.Time {
+		return time.Date(2016, 10, 1, 0, 0, 0, 0, time.UTC)
+	}
 
 	type fields struct {
 		Accounts []string
@@ -157,7 +159,7 @@ func TestSearch_DBOptions(t *testing.T) {
 			want: waukeen.TransactionsDBOptions{
 				Types: []waukeen.TransactionType{waukeen.Debit},
 				Start: time.Date(2016, 10, 1, 0, 0, 0, 0, time.UTC),
-				End:   time.Date(2016, 10, 31, 0, 0, 0, 0, time.UTC),
+				End:   time.Date(2016, 11, 1, 0, 0, 0, 0, time.UTC),
 			},
 		},
 		{
@@ -170,7 +172,7 @@ func TestSearch_DBOptions(t *testing.T) {
 			want: waukeen.TransactionsDBOptions{
 				Types: []waukeen.TransactionType{3, 4},
 				Start: time.Date(2016, 11, 1, 0, 0, 0, 0, time.UTC),
-				End:   time.Date(2016, 12, 31, 0, 0, 0, 0, time.UTC),
+				End:   time.Date(2017, 1, 1, 0, 0, 0, 0, time.UTC),
 			},
 		},
 		{
@@ -187,7 +189,7 @@ func TestSearch_DBOptions(t *testing.T) {
 				Types:    []waukeen.TransactionType{3, 4},
 				Tags:     []string{"food", "gift"},
 				Start:    time.Date(2016, 11, 1, 0, 0, 0, 0, time.UTC),
-				End:      time.Date(2016, 12, 31, 0, 0, 0, 0, time.UTC),
+				End:      time.Date(2017, 1, 1, 0, 0, 0, 0, time.UTC),
 			},
 		},
 	}

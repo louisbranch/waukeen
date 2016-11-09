@@ -140,7 +140,7 @@ func TestAccounts(t *testing.T) {
 				Accounts: []string{"2"},
 				Types:    []waukeen.TransactionType{waukeen.Credit},
 				Start:    time.Date(2016, 10, 01, 0, 0, 0, 0, time.UTC),
-				End:      time.Date(2016, 10, 31, 0, 0, 0, 0, time.UTC),
+				End:      time.Date(2016, 11, 1, 0, 0, 0, 0, time.UTC),
 				Tags:     []string{"first", "second"},
 			}
 			if !reflect.DeepEqual(opts, filled) {

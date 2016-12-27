@@ -342,6 +342,8 @@ func (db *DB) FindTransactions(opts waukeen.TransactionsDBOptions) ([]waukeen.Tr
 		query += "GROUP BY transactions.id"
 	}
 
+	query += " ORDER BY transactions.date"
+
 	rows, err := db.Query(query)
 	if err != nil {
 		return nil, errors.Wrapf(err, "transaction query %s", query)

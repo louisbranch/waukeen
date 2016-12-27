@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"math"
 	"path"
 	"path/filepath"
 	"sort"
@@ -75,12 +74,25 @@ func (h *HTML) parse(names ...string) (tpl *template.Template, err error) {
 	return tpl, nil
 }
 
-func currency(amount int64) string {
+func currency(val int64) string {
 	symbol := "$"
-	if amount < 0 {
+	if val < 0 {
 		symbol = "-" + symbol
+		val *= -1
 	}
-	return fmt.Sprintf("%s%.2f", symbol, math.Abs(float64(amount))/100)
+
+	res := fmt.Sprintf(".%02d", val%100)
+
+	val = val / 100
+
+	for val >= 1000 {
+		res = fmt.Sprintf(",%03d", val%1000) + res
+		val = val / 1000
+	}
+
+	res = fmt.Sprintf("%s%d", symbol, val) + res
+
+	return res
 }
 
 func contains(list []string, item string) bool {

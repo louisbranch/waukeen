@@ -17,9 +17,11 @@
         {{ if $form.Types }}
           <option value="1" {{ if contains $form.Types "1" }} selected {{ end }} >Credit</option>
           <option value="2" {{ if contains $form.Types "2" }} selected {{ end }} >Debit</option>
+          <option value="3" {{ if contains $form.Types "3" }} selected {{ end }} >Check</option>
         {{ else }}
           <option value="1" selected>Credit</option>
           <option value="2" selected>Debit</option>
+          <option value="3" selected>Check</option>
         {{ end }}
       </select>
     </div>

@@ -20,6 +20,7 @@ const (
 	OtherTransaction TransactionType = iota
 	Credit
 	Debit
+	Check
 )
 
 const (
@@ -156,6 +157,8 @@ func (t TransactionType) String() string {
 		return "Debit"
 	case Credit:
 		return "Credit"
+	case Check:
+		return "Check"
 	}
 	return "Other"
 }
